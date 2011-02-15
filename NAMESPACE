@@ -1,0 +1,15 @@
+exportPattern("^[^\\.]")	#exports all variables that do not start with a period.
+
+import(nlme)
+
+S3method(fixef,gls)
+S3method(ranef,gls)
+S3method(seFixef,gls)
+S3method(seFixef,lme)
+S3method(varFixef,gls)
+S3method(varFixef,lme)
+S3method(varRanef,gls)
+S3method(varRanef,lme)
+
+#useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code 
+
