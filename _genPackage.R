@@ -39,7 +39,7 @@ pkg <- "twNlme"
 	unlink( file.path("man","*.Rd") )
 	package.skeleton.dx(".")
 	file.copy( Sys.glob(file.path("inst","genData","*.Rd")), "man", overwrite = TRUE )	# copy descriptions of data
-	file.copy( Sys.glob(file.path("*.Rd")), "man", overwrite = TRUE )	# copy descriptions of data
+	#file.copy( Sys.glob(file.path("*.Rd")), "man", overwrite = TRUE )	# copy descriptions of data
 	
 	# generate the HTML  files
 	prevWd <- setwd("..")

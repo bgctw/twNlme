@@ -12,7 +12,8 @@ expandLinFormula(linForm, suffix = "", varNames = NULL)
 }
 \details{parameter names will be lhs of the formula + suffix + .i wiht .0 for the intercept
 if there is no intercept, starting from .1}
-\value{String of formula with coefficients expanded to linear combinations of covariates and random effects.}
+\value{String of formula with coefficients expanded to linear combinations of terms
+Names of coefficients are provided with attribute \code{coef} and terms with attribute \code{termVec}}
 
 \author{Thomas Wutzler <twutz@bgc-jena.mpg.de>}
 
@@ -20,7 +21,7 @@ if there is no intercept, starting from .1}
 
 \seealso{\code{\link{twNlme-package}}}
 \examples{
-data(modExampleStem)
-fixForm <- twNlme:::.extractFixedList(modExampleStem)
-expandLinFormula(fixForm[[1]])
+expandLinFormula(b0~1)
+# note that si*age treated as multiplication instead of all interactions
+expandLinFormula(linForm <- b0~si+log(age)+I(si+age)+si*age)	 
 }

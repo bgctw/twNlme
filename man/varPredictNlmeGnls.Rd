@@ -37,13 +37,14 @@ data(Wutzler08BeechStem)
 
 lmStart <- lm(log(stem) ~ log(dbh) + log(height), Wutzler08BeechStem )
 nlmeFit <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
-			,fixed=list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
+			,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 			,random=  b0 ~ 1 | author
 			,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
 			,weights=varPower(form=~fitted(.))
 			,method='REML'		# for unbiased error estimates
 		)
 summary(nlmeFit)
+x3 <- update(nlmeFit, fixed=list(b0 ~ si * log(age), b1+b2 ~ 1))
 
 gnlsFit <- gnls( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
 	,params = list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
@@ -79,7 +80,7 @@ lines( resNlme[,"fit"]-resNlme[,"sdInd"] ~ dbh, nData, col="orange", lty="dashed
 # we need a correction term
 .tmp.f <- function(){	# takes long, so do not execute each test time 
 	nlmeFitAuthor <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
-		,fixed=list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
+		,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 		,random=  b0 ~ 1 | author
 		,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
 		,weights=varPower(form=~fitted(.)|author)

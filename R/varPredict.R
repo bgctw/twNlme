@@ -23,6 +23,7 @@ varPredictNlmeGnls <- function(
 	if( !inherits(object,"nlmeVarPrep") )
 		object <- attachVarPrep(object)
 	#tmpf <- object$varPrep$gradFix; mtrace(tmpf); tmpf(newdata)
+	newdata <- object$varPrep$fAddDummies(newdata)	# add dummy columns for categorial variables used in gradFix and gradRan 
 	uNew <- object$varPrep$gradFix(object, newdata, pred)
 	varFix <- varFixef(object)
 	vcFix <- rep(0,nrow(newdata))
@@ -62,13 +63,14 @@ attr(varPredictNlmeGnls,"ex") <- function(){
 	
 	lmStart <- lm(log(stem) ~ log(dbh) + log(height), Wutzler08BeechStem )
 	nlmeFit <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
-				,fixed=list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
+				,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 				,random=  b0 ~ 1 | author
 				,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
 				,weights=varPower(form=~fitted(.))
 				,method='REML'		# for unbiased error estimates
 			)
 	summary(nlmeFit)
+	x3 <- update(nlmeFit, fixed=list(b0 ~ si * log(age), b1+b2 ~ 1))
 	
 	gnlsFit <- gnls( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
 		,params = list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
@@ -104,7 +106,7 @@ attr(varPredictNlmeGnls,"ex") <- function(){
 	# we need a correction term
 	.tmp.f <- function(){	# takes long, so do not execute each test time 
 		nlmeFitAuthor <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
-			,fixed=list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
+			,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 			,random=  b0 ~ 1 | author
 			,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
 			,weights=varPower(form=~fitted(.)|author)
@@ -211,38 +213,107 @@ varResidPower <- function(
 	##seealso<< \code{\link{twNlme-package}}
 }
 
-#------------------- constructing the full formula 
-.extractFixedList <- function( 
-	### extracts the fixed effects in list form "list(b0=b0 ~ si + age + alt, b1=b1 ~ 1, b2=b2 ~ 1)"
-	x					##<< the fitted nlme model
-	,makeNames=TRUE 	##<< whether to attach an explicit name attribute
+#------------------- constructing the full formula
+.getCategorialLevels <- function(
+	### extracting the categorial levels of the dummy variables from termVec
+	termVec			##<< original (non-whitespace removed) names of all the variables including the dummy variables
+	, categorialNames=attr(termVec,"categorialNames")	##<< baseName of the categorial variables
 ){
-	if( inherits(x,"nlme") ){
-		fixF <- x$call$fixed
+	catMap <- as.list(categorialNames)
+	names(catMap) <- categorialNames
+	for( cName in categorialNames){
+		tmpi <- grep(paste("^",cName,sep=""),termVec)
+		#catMap[cName] <- sub(paste(".*\\.",cName,"(.*)$",sep=""),"\\1", termVec[tmpi]) 
+		catMap[[cName]] <- sub(paste("^",cName,"(.*)$",sep=""),"\\1", termVec[tmpi]) 
+	}
+	catMap	
+}
+
+.gsubFormTerm <- function(
+	### strip whitespace characters, remove "I", and replace ":" by "*" 
+	formTerm	##<< vector of strings representing a term in a formula
+){
+	# \\b matches word boundaries sot ath SI(a) is not replaced
+	gsub(":","*",gsub("\\bI\\(","\\1\\(",gsub("\\s+","",formTerm) ) )
+}
+
+.extractFixedComponent <- function(
+	### Extract the terms from pfit component
+	comp						##<< component  of list nlmefit$pfit 
+	, excludeIntercept=FALSE	##<< set to TRUE to exclude intercept, (e.g. not used for derivation)
+){
+	termVec <- if( is.numeric(comp) ){
+		termVec <- .gsubFormTerm(colnames(comp))	
 	}else{
-		if( !is.null(x$call$params) ){
-			fixF <- x$call$params
+		termVec <- "(Intercept)"
+		#attr(termVec,"hasIntercept") <- TRUE
+	}
+	if( termVec[1] == "(Intercept)"){
+		if( excludeIntercept ){
+			termVec <- termVec[-1]
 		}else{
-			fixF <- lapply( as.list(names(coefficients(x))), function(el){ eval(parse(text=paste("formula(",el,"~1)"))) } )
+			#attr(termVec,"hasIntercept") <- TRUE
 		}
 	}
-	if (inherits(fixF, "formula")){
-		fixF = list( fixF )
+	#mtrace(.getCategorialLevels)
+	catMap <- .getCategorialLevels( colnames(comp), names(attr(comp,"contrasts")) )
+	attr(termVec,"catMap") <- catMap
+	termVec
+	### string vector of terms
+	### Additionally, attribute \code{catMap} holds the levels of each categorial variable
+}
+.constructLinFormulaString <- function(
+	### construct a string of a expression involving coefficients and terms
+	termVec, parName, prefix=""
+){
+	coefNames <- paste(parName,prefix,".",make.names(termVec),sep="" )
+	termCoefVec <- paste( coefNames,"*", termVec,sep="" )
+	if(termVec[1] == "(Intercept)") termCoefVec[1] <- coefNames[1]
+	form <- paste( termCoefVec, collapse=" + ")
+	##value<<
+	list( 
+		form=form				##<< the string of linear formula
+		, coefNames=coefNames 	##<< the names of the coefficients
+	)
+	##end<<
+}
+
+
+.asFormulaTermVec <- function(
+	### connect all the terms and parse expression 
+	termVec
+){
+	form <- paste("~", paste(termVec,collapse="+"))
+	eval(parse(text=form))
+	### two sided formula
+}
+
+
+.extractFixedList <- function( 
+	### extracts the fixed effect terms 
+	x					##<< the fitted nlme model
+	,makeNames=TRUE 	##<< whether to attach an explicit name attribute
+	,...				##<< further argument to \code{\link{.extractFixedComponent}}
+){
+	isNlme <- inherits(x,"nlme") 
+	resString <- list()
+	catMap <- list()
+	for( parName in names(x$plist) ){
+		comp  <- if(isNlme) x$plist[[parName]]$fixed else x$plist[[parName]]
+		resString[[parName]] <- tVec <- .extractFixedComponent( comp, ...)
+		catMapPar <- attr(tVec,"catMap")
+		catMap[ names(catMapPar) ] <- ""
+		for( cName in names(catMapPar) ) catMap[[cName]] <- catMapPar[[cName]]
+		attr(resString[[parName]],"catMap") <- NULL
 	}
-	if ( is.call(fixF) ) {
-		fixF = eval(fixF)
-	}
-	#print("pred_beech_nl.formula.fixed:"); print(fixF);
-	if( makeNames ){
-		names( fixF ) <- as.character(lapply(fixF, function(el){el[[2]]} ))
-	}
-	#deparse(lapply(fixF, function(el) as.name(deparse(el))))
-	fixF
-	# list of formulas for each coeficient
+	attr(resString,"catMap") <- catMap
+	resString
+	# list with entry for each parameter being a vector of strings for each term in the model formula
 }
 attr(.extractFixedList,"ex") <- function(){
 	data(modExampleStem)
 	(tmp <- .extractFixedList(modExampleStem))
+	# see also runitvarPredictNlmeGnls.R
 }
 
 
@@ -280,6 +351,7 @@ expandLinFormula <- function(
 	coef2 <- c("")[ FALSE ]
 	parBaseName <- linForm[[2]]
 	terms2 <- attr(terms( linForm ),"term.labels")
+	termVec <- terms2 <- gsub(":","*",terms2)
 	if( length(terms2) > 0 ){
 		if( 0 == length(attr(terms( linForm ),"intercept")) ){
 			coef2 <- if( 0<length(varNames) ) varNames else paste( parBaseName, suffix, ".", seq(along=terms2), sep="" )
@@ -290,25 +362,29 @@ expandLinFormula <- function(
 			coefb = if( 0<length(varNames) ) varNames[1] else paste( parBaseName,suffix,".0", sep="")
 			coef2 = c( coefb, coef2 )
 			value = paste( coefb, " + ", value, sep="")
+			termVec <- c( termVec, "(Intercept)" )
 		}
 	}else{
 		if( attr(terms( linForm ),"intercept")){
 			value <- coef2 <- if( 0<length(varNames) ) varNames else paste( parBaseName, suffix, ".0", sep="" )
 			#value = coef2 = paste( parBaseName,suffix,".0", value, sep="")
+			termVec <- "(Intercept)"
 		}
 	}
 	# if names are given 
 	
 	attr(value,"coef") <- coef2
 	attr(value,"parBaseName") <- parBaseName
+	attr(value,"termVec") <- termVec
 	value
-	### String of formula with coefficients expanded to linear combinations of covariates and random effects.
+	### String of formula with coefficients expanded to linear combinations of terms
+	### Names of coefficients are provided with attribute \code{coef} and terms with attribute \code{termVec}
 	##seealso<< \code{\link{twNlme-package}}
 	}
 attr(expandLinFormula,"ex") <- function(){
-	data(modExampleStem)
-	fixForm <- twNlme:::.extractFixedList(modExampleStem)
-	expandLinFormula(fixForm[[1]])
+	expandLinFormula(b0~1)
+	# note that si*age treated as multiplication instead of all interactions
+	expandLinFormula(linForm <- b0~si+log(age)+I(si+age)+si*age)	 
 }
 #ex: fixF( string x$call$fixed, "b0" ) 
 #results in 'b0.0 + b0.1*si + b0r.1'
@@ -316,15 +392,16 @@ attr(expandLinFormula,"ex") <- function(){
 
 #getTerms( fixF, 4 )
 
-.covarMap <- function( 
+.fullNlmeCoefFormulas <- function( 
 	### extract the expanded linear formula with covariates and random effect for each parameter
 	nfit = NULL		##<< the fitted nlme object 
-	,fixedMap = .extractFixedList(nfit) 
-	,randomMap = .extractRandomList(nfit)
+	,fixedMap = .extractFixedList(nfit) 	# list of strings by coefficient
+	,randomMap = .extractRandomList(nfit)	# list of formulas by coefficient
 ){
 	pMap <- list()
 	pMapfc <- NULL #c("")[FALSE]
 	pMaprc <- NULL #c("")[FALSE]
+	#termsVecAll <- NULL
 	#name list elements by RHS of the formulas
 	#names(fixedMap) <- sapply( fixedMap, function(x) x[[2]] )
 	#names(randomMap) <- sapply( randomMap, function(x) x[[2]] )
@@ -341,32 +418,38 @@ attr(expandLinFormula,"ex") <- function(){
 #			)
 #			tmp <- expandLinFormula(fixedMap[[i]], varNames=tmpNamesReplace)
 			# deriv cant digest b0.(Intercept), so we have to create new names
-			tmp <- expandLinFormula(fixedMap[[i]])
-			val = c( val, tmp )
-			pMapfc <- c( pMapfc, attr(tmp,"coef") ) 
+			#tmp <- expandLinFormula(fixedMap[[ params[i] ]])
+			tmp <- .constructLinFormulaString(fixedMap[[ params[i] ]], params[i])
+			val = c( val, tmp$form )
+			pMapfc <- c( pMapfc, tmp$coefNames)
 		}
 		if( !is.null(randomMap[[ params[i] ]]) ){
 			#names are repeated from fixed effects, hence construct new names
 			#tmpNamesReplace <- ranefNames[ grep( paste("^",params[i],".",sep=""), ranefNames )]
-			tmp <- expandLinFormula(randomMap[[i]],suffix="r")
+			terms(randomMap[[ params[i] ]])
+			tmp <- expandLinFormula(randomMap[[ params[i] ]],suffix="r")
 			val = c( val, tmp )
-			pMaprc <- c( pMaprc, attr(tmp,"coef") ) 
+			pMaprc <- c( pMaprc, attr(tmp,"coef") )
+			#termsVecAll <- c(termsVecAll, attr(tmp,"termVec"))
 		}
 		if( is.null(val) ) val = params[i]
 		val = paste( val, collapse="+" )
 		pMap <- c( pMap, x = val	)	
 		names(pMap)[ length(pMap) ] = as.character(params[i])
 	}
+	#termsVecAll <- unique( c(unlist(fixedMap), termsVecAll) )
 	attr(pMap,"fixCoef") <- pMapfc
 	attr(pMap,"ranCoef") <- pMaprc
+	attr(pMap,"catMap") <- attr(fixedMap,"catMap")
+	#attr(pMap,"termVec") <- termsVecAll
 	pMap
 	### list with each entry representing a string of an expanded formula
-	### additional all the coefficients are provided in attributes fixCoef and ranCoef
+	### additional all the coefficient names are provided in attributes fixCoef and ranCoef
 }
-attr(.covarMap,"ex") <- function(){
+attr(.fullNlmeCoefFormulas,"ex") <- function(){
 	data(modExampleStem)
 	#mtrace(.covarMap)
-	(tmp <- .covarMap(modExampleStem))
+	(tmp <- .fullNlmeCoefFormulas(modExampleStem))
 }
 
 attachVarPrep <- function(
@@ -376,6 +459,7 @@ attachVarPrep <- function(
 	,fDerivFixef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to fixed effects at newdata 
 	,fDerivRanef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to random effects at newdata 
 	,fVarResidual=NULL			##<< \code{function(nfit,newdata,pred)} to calculate var(residual) at newdata
+	,fAddDummies=NULL			##<< \code{function(newdata)} see "Handling categorial variables"
 ){
 	##details<<
 	## For usage with \code{\link{varPredictNlmeGnls}}, this function attaches \itemize{
@@ -385,36 +469,42 @@ attachVarPrep <- function(
 	## }
 	## \describe{ \item{Automatic derivation}{
 	## If proper basic formula is given, \code{fDerivFixef} and \code{fDerivRanef} will be automatically derived from the model.
-	## In this case fixed and random effects have to be specified as list of formulas for each coefficient instead of single formula 
-	## e.g. \code{list(b0~1,b1~1)} instead of \code{list(b0+b1~1)}. 
 	## Up until now, only single level random effects models are supported for automatic derivation.
+	## }}
+
+	##details<<
+	## \describe{ \item{Handling of categorial variables}{
+	## item \code{fAddDummies=function(newdata)} of \code{varPrep} adds columns for dummy variables 
+	## of categorial variables to newdata.
+	## Default implementation supports only (and assumes) \code{contr.treatment} coding.
+	## For other codings user must provide the function with argument \code{fAddDummies}. 
 	## }}
 	
 	##seealso<< \code{\link{twNlme-package}}
 	
-
+	fullFormula <- "user-specified"
 	if( is.null(fDerivFixef) | (0 < length(ranef(object) & is.null(fDerivRanef) )) ){
 		formStr <- if( inherits(form,c("formula","call","language")) ) deparse(form[[length(form)]]) else form
 		#formStr = "b0*dbh^b1*height^b2"
 		#construct a mapping of each fixed/random parameter in original model formula onto its linear combination
 		#formula.fixed and formula.random in pred_beech_nl.r
-		tmp <- .covarMap( object )
+		cfForm <- .fullNlmeCoefFormulas( object )
 		tmpf1str <- paste("~",formStr," ") #enclose by empty spaces
 		#construct the full formula
 		#replace parameter names by their extended linear combination of covariates
 		#parametername anclosed by non-name chars
 		#gsub("([^0-9A-Za-z_.])(b0)([^0-9A-Za-z_.])","\\1XXX\\3","b0.01~b0+b01")
-		for( param in names(tmp) ){
+		for( param in names(cfForm) ){
 			pat <- paste("([^0-9A-Za-z_.])(",param,")([^0-9A-Za-z_.])", sep="" )
-			repl <- paste("\\1(",tmp[[param]],")\\3",sep="")
+			repl <- paste("\\1(",cfForm[[param]],")\\3",sep="")
 			tmpf1str <- gsub( pat, repl, tmpf1str )
 		}
-		tmpf2str <- gsub("I\\(","\\(",gsub(":", "*", tmpf1str))
+		tmpf2str <- fullFormula <- gsub("I\\(","\\(",gsub(":", "*", tmpf1str))
 		tmpf <- as.formula(tmpf2str)
 		
-		fixCoefNames <- attr(tmp,"fixCoef")
+		fixCoefNames <- attr(cfForm,"fixCoef")
 		if( is.null(fixCoefNames) ) fixCoefNames <- names(fixef(object))
-		ranCoefNames <- attr(tmp,"ranCoef")
+		ranCoefNames <- attr(cfForm,"ranCoef")
 		if( is.null(ranCoefNames) ) ranCoefNames <- names(ranef(object))
 		
 		gradRanExp <- if( 0 < length(ranCoefNames) ){
@@ -429,9 +519,36 @@ attachVarPrep <- function(
 	coefGradFixed <- {tmp <- fixef(object); names(tmp) <- fixCoefNames; as.list(tmp) }
 	coefGradRan <- as.list(structure( rep(0,length(ranCoefNames)), names=ranCoefNames))
 	coefGrad <- c(coefGradFixed,coefGradRan)
+	if( 0==length(fAddDummies)){
+		# construct the mapping of dummy variable names to values
+		catMap <- attr(cfForm,"catMap")
+		catMapVar <- catMap
+		for( cName in names(catMap) ){
+			catMapVar[[cName]] <- paste(cName, .gsubFormTerm(catMap[[cName]]) ,sep="") # from .extractFixedComponent
+		}
+		fAddDummies <- function(
+			### add dummy variables for categorial variables
+			newdata		##<< dataframe of predictors
+		){
+			# cName <- "author"
+			for( cName in names(catMap) ){
+				#j=5
+				for( j in seq_along(catMapVar[[cName]]) ){
+					cValueVar <- catMapVar[[cName]][j]
+					cValue <- catMap[[cName]][j]
+					newdata[cValueVar] <- 0
+					newdata[[cValueVar]][ newdata[[cName]]==cValue ] <- 1
+				}
+			} 
+			newdata
+			### dataframe \code{newdata} with additional numeric columns for dummy variables either 0 and 1  
+		}	
+	}
 	gradFix <- if( !is.null(fDerivFixef) ) fDerivFixef else {
 		 gradFixExp <- deriv(tmpf, fixCoefNames )
-		 function(object,newdata,pred){ attr( with( coefGrad, with(newdata, eval(gradFixExp) )),"gradient") }
+		 function(object,newdata,pred){
+			 attr( with( coefGrad, with(newdata, eval(gradFixExp) )),"gradient") 
+		 }
 	}
 	gradRan <- if( !is.null(fDerivRanef) ) fDerivRanef else {
 		function(object,newdata,pred){ attr( with( coefGrad, with(newdata, eval(gradRanExp) )),"gradient")}
@@ -454,7 +571,9 @@ attachVarPrep <- function(
 		,coefRan = ranCoefNames		##<< names of the random coefficients in gradiant function
 		,gradFix = gradFix			##<< derivative function for fixed effects
 		,gradRan = gradRan			##<< derivative function for random effects
+		,fAddDummies = fAddDummies	##<< function to add dummy columns for categorial variables to predictor data frame 	
 		,fVarResidual = fVarResidual	##<< function to calculate residual variance
+		,fullFormula = fullFormula	##<< the extended formula as a string
 		)
 	##end<<
 	object		

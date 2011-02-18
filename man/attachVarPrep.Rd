@@ -3,7 +3,7 @@
 \title{attachVarPrep}
 \description{Attach partial derivative and residual variance functions to the nonlinear fitted object}
 \usage{
-attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef = NULL, fVarResidual = NULL)
+attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef = NULL, fVarResidual = NULL, fAddDummies = NULL)
 }
 \arguments{
   \item{object}{the fitted nlme object}
@@ -11,6 +11,7 @@ attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef 
   \item{fDerivFixef}{\code{function(nfit,newdata,pred)} of derivatives in respect to fixed effects at newdata}
   \item{fDerivRanef}{\code{function(nfit,newdata,pred)} of derivatives in respect to random effects at newdata}
   \item{fVarResidual}{\code{function(nfit,newdata,pred)} to calculate var(residual) at newdata}
+  \item{fAddDummies}{\code{function(newdata)} see "Handling categorial variables"}
 }
 \details{For usage with \code{\link{varPredictNlmeGnls}}, this function attaches \itemize{
 \item derivative functions
@@ -19,9 +20,14 @@ attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef 
 }
 \describe{ \item{Automatic derivation}{
 If proper basic formula is given, \code{fDerivFixef} and \code{fDerivRanef} will be automatically derived from the model.
-In this case fixed and random effects have to be specified as list of formulas for each coefficient instead of single formula 
-e.g. \code{list(b0~1,b1~1)} instead of \code{list(b0+b1~1)}. 
 Up until now, only single level random effects models are supported for automatic derivation.
+}}
+
+\describe{ \item{Handling of categorial variables}{
+item \code{fAddDummies=function(newdata)} of \code{varPrep} adds columns for dummy variables 
+of categorial variables to newdata.
+Default implementation supports only (and assumes) \code{contr.treatment} coding.
+For other codings user must provide the function with argument \code{fAddDummies}. 
 }}
 
 \describe{\item{Variance of Residuals}{
@@ -35,7 +41,9 @@ For other residual variance models. See e.g. \code{\link{varResidPower}} corresp
 \item{coefRan}{names of the random coefficients in gradiant function}
 \item{gradFix}{derivative function for fixed effects}
 \item{gradRan}{derivative function for random effects}
-\item{fVarResidual}{function to calculate residual variance}}
+\item{fAddDummies}{function to add dummy columns for categorial variables to predictor data frame}
+\item{fVarResidual}{function to calculate residual variance}
+\item{fullFormula}{the extended formula as a string}}
 
 \author{Thomas Wutzler <twutz@bgc-jena.mpg.de>}
 
