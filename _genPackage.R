@@ -53,6 +53,12 @@ pkg <- "twNlme"
 	
 	# copy to the generated html into working directory
 	#file.copy( htmlRoot, ".", recursive=TRUE)
+	
+	# copy to mdi Code documentation directory
+	destDir <- file.path("z:","public_html","code_doc",pkg)
+	try(file.remove(destDir))
+	dir.create(destDir)
+	file.copy( htmlRoot, destDir, recursive=TRUE)
 }
 
 
