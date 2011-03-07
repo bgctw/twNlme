@@ -207,7 +207,7 @@ varResidPower <- function(
 	,pred	##<< the prediction at population level
 ){
 	sigma <- object$sigma
-	delta <- coef(object$modelStruct$varStruct)["power"]
+	delta <- coef(object$modelStruct$varStruct,uncons = FALSE, allCoef = TRUE)["power"]
 	sigma^2 * abs(pred)^(2*delta)
 	### numeric vector of var(eps_i)
 	##seealso<< \code{\link{twNlme-package}}
