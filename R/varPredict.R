@@ -114,7 +114,7 @@ attr(varPredictNlmeGnls,"ex") <- function(){
 		#pred <- predict(modExampleStem, newdata, level=0)
 		varResidPowerAuthor <- function(object,newdata,pred	){
 			sigma <- object$sigma
-			deltaAuthor <- coef(object$modelStruct$varStruct)
+			deltaAuthor <- coef(object$modelStruct$varStruct, allCoef = TRUE)
 			delta <-  mean(deltaAuthor)
 			varDelta <- var(deltaAuthor)
 			sigma^2 * abs(pred)^(2*delta) * (1+2*log(abs(pred))^2*varDelta)
@@ -455,17 +455,17 @@ attr(.fullNlmeCoefFormulas,"ex") <- function(){
 attachVarPrep <- function(
 	### Attach partial derivative and residual variance functions to the nonlinear fitted object
 	object		##<< the fitted nlme object
-	,form = object$call$model  	##<< the formula used to fit the object, either formula or string used for automated derivation 
+	,form = formula(object)  	##<< the formula used to fit the object, either formula or string used for automated derivation 
 	,fDerivFixef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to fixed effects at newdata 
 	,fDerivRanef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to random effects at newdata 
 	,fVarResidual=NULL			##<< \code{function(nfit,newdata,pred)} to calculate var(residual) at newdata
 	,fAddDummies=NULL			##<< \code{function(newdata)} see "Handling categorial variables"
 ){
 	##details<<
-	## For usage with \code{\link{varPredictNlmeGnls}}, this function attaches \itemize{
+	## For usage with \code{\link{varPredictNlmeGnls}}, this function attaches to the fitted object \itemize{
 	## \item derivative functions
 	## \item residual variance function
-	## \item Variance-Covariance methods to fitted object
+	## \item Variance-Covariance methods 
 	## }
 	## \describe{ \item{Automatic derivation}{
 	## If proper basic formula is given, \code{fDerivFixef} and \code{fDerivRanef} will be automatically derived from the model.
@@ -474,7 +474,7 @@ attachVarPrep <- function(
 
 	##details<<
 	## \describe{ \item{Handling of categorial variables}{
-	## item \code{fAddDummies=function(newdata)} of \code{varPrep} adds columns for dummy variables 
+	## item \code{fAddDummies=function(newdata)} of restult entry \code{varPrep} adds columns for dummy variables 
 	## of categorial variables to newdata.
 	## Default implementation supports only (and assumes) \code{contr.treatment} coding.
 	## For other codings user must provide the function with argument \code{fAddDummies}. 

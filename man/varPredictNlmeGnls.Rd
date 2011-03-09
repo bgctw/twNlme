@@ -88,7 +88,7 @@ lines( resNlme[,"fit"]-resNlme[,"sdInd"] ~ dbh, nData, col="orange", lty="dashed
 	#pred <- predict(modExampleStem, newdata, level=0)
 	varResidPowerAuthor <- function(object,newdata,pred	){
 		sigma <- object$sigma
-		deltaAuthor <- coef(object$modelStruct$varStruct)
+		deltaAuthor <- coef(object$modelStruct$varStruct, allCoef = TRUE)
 		delta <-  mean(deltaAuthor)
 		varDelta <- var(deltaAuthor)
 		sigma^2 * abs(pred)^(2*delta) * (1+2*log(abs(pred))^2*varDelta)

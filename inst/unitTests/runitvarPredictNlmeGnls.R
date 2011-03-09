@@ -74,7 +74,42 @@ test.categorial <- function(){
 	#str(pnFit$varPrep)
 	#tmp.f <- pnFit$varPrep$gradFix; mtrace(tmp.f); pnFit$varPrep$gradFix <- tmp.f
 	#mtrace(varPredictNlmeGnls)
+	nData$author <- factor("Cienciala", levels=levels(Wutzler08BeechStem$author) )
 	resNlme <- varPredictNlmeGnls(pnFit,nData)	
+	checkTrue( all(resNlme > 0))
+	
+}
+
+t_est.formula <- function(){
+	# test wheter formula can be retrieved, even if call includes a variable
+	# works when executed from workspace
+	# fails on RCheck 
+	data(Wutzler08BeechStem)
+	
+	lmStart <- lm(log(stem) ~ log(dbh) + log(height), Wutzler08BeechStem )
+	tmpForm <- stem~b0*dbh^b1*height^b2
+	nlmeFit <- nlme( tmpForm, data=Wutzler08BeechStem
+		,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
+		,random=  b0 ~ 1 | author
+		,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
+		,weights=varPower(form=~fitted(.))
+		,method='REML'		# for unbiased error estimates
+	)
+	formula(nlmeFit)
+	summary(nlmeFit)
+	
+#---- some artificial data for new prediction
+	nData <- data.frame( dbh=tmp <- seq(2,80,length.out=40), alt=median(Wutzler08BeechStem$alt), si=median(Wutzler08BeechStem$si) )
+	lmHeight <- lm( height ~ dbh, Wutzler08BeechStem)
+	nData$height <- predict(lmHeight, nData)
+	lmAge <- lm( age ~ dbh, Wutzler08BeechStem)
+	nData$age <- predict(lmAge, nData)
+	
+#---- do the prediction including variance calculation
+# automatic derivation with accounting for residual variance model
+	#mtrace(attachVarPrep)
+	nlmeFit <- attachVarPrep(nlmeFit, fVarResidual=varResidPower)
+	resNlme <- varPredictNlmeGnls(nlmeFit,nData)	
 	checkTrue( all(resNlme > 0))
 	
 }

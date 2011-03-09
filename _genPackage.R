@@ -68,7 +68,7 @@ pkg <- "twNlme"
 	library(twMisc) 	# for twUTestF and copy2clip
 	twUtestF()											# all unit tests		(displaying only summary output)
 	#twUtestF(respTempLlyodAndTaylor94)					# single unit test
-	#twUtestF(respTempLlyodAndTaylor94,"test.temp10")		# single test function  (displaying all the output)
+	#twUtestF(varPredictNlmeGnls,"test.formula")		# single test function  (displaying all the output)
 	
 	# let R check package consistency
 	prevWd <- setwd("..")

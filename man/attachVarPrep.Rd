@@ -3,7 +3,7 @@
 \title{attachVarPrep}
 \description{Attach partial derivative and residual variance functions to the nonlinear fitted object}
 \usage{
-attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef = NULL, fVarResidual = NULL, fAddDummies = NULL)
+attachVarPrep(object, form = formula(object), fDerivFixef = NULL, fDerivRanef = NULL, fVarResidual = NULL, fAddDummies = NULL)
 }
 \arguments{
   \item{object}{the fitted nlme object}
@@ -13,10 +13,10 @@ attachVarPrep(object, form = object$call$model, fDerivFixef = NULL, fDerivRanef 
   \item{fVarResidual}{\code{function(nfit,newdata,pred)} to calculate var(residual) at newdata}
   \item{fAddDummies}{\code{function(newdata)} see "Handling categorial variables"}
 }
-\details{For usage with \code{\link{varPredictNlmeGnls}}, this function attaches \itemize{
+\details{For usage with \code{\link{varPredictNlmeGnls}}, this function attaches to the fitted object \itemize{
 \item derivative functions
 \item residual variance function
-\item Variance-Covariance methods to fitted object
+\item Variance-Covariance methods 
 }
 \describe{ \item{Automatic derivation}{
 If proper basic formula is given, \code{fDerivFixef} and \code{fDerivRanef} will be automatically derived from the model.
@@ -24,7 +24,7 @@ Up until now, only single level random effects models are supported for automati
 }}
 
 \describe{ \item{Handling of categorial variables}{
-item \code{fAddDummies=function(newdata)} of \code{varPrep} adds columns for dummy variables 
+item \code{fAddDummies=function(newdata)} of restult entry \code{varPrep} adds columns for dummy variables 
 of categorial variables to newdata.
 Default implementation supports only (and assumes) \code{contr.treatment} coding.
 For other codings user must provide the function with argument \code{fAddDummies}. 
