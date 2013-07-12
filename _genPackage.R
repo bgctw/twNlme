@@ -25,6 +25,7 @@ pkg <- "twNlme"
 
 
 .tmp.inlinedocs <- function(){
+	pkg <- "twNlme" 
 	# generate documentation
 	
 	# generate RD Files

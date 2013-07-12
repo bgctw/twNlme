@@ -7,5 +7,6 @@ Maintainer: Thomas Wutzler <twutz@bgc-jena.mpg.de>
 Description: Standard errors for basic nlme and gnls model predictions
 License: GPL-2
 LazyLoad: yes
-Depends: R (>= 1.10.0), R.methodsS3, nlme
+Depends: R (>= 1.10.0), nlme
+Imports: R.methodsS3
 

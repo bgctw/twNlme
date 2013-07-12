@@ -1,4 +1,4 @@
-setMethodS3("varRanef","lme", function( 
+R.methodsS3::setMethodS3("varRanef","lme", function( 
  	### Variance-Covariance of lme random effects (Psi)
 	object			##<< the fitted nlme or lme model
 	,varName=NULL	##<< for which parameter
@@ -29,7 +29,7 @@ attr(varRanef.lme,"ex") <- function(){
 	varRanef(fm2)
 }
 
-setMethodS3("varRanef","gls", function(
+R.methodsS3::setMethodS3("varRanef","gls", function(
 		### Empty Variance-Covariance matrix for random effects
 		object			##<< the fitted gls or gnls model
 		,varName=NULL	##<< for which parameter
@@ -41,7 +41,7 @@ setMethodS3("varRanef","gls", function(
 	})
 
 
-setMethodS3("varFixef","lme", function( 
+R.methodsS3::setMethodS3("varFixef","lme", function( 
 		### Variance-Covariance of lme fixed effects
 		object	##<< the fitted model
 		,...
@@ -50,7 +50,7 @@ setMethodS3("varFixef","lme", function(
 		### named numeric matrix
 		##seealso<< \code{\link{twNlme-package}}
 	})
-setMethodS3("varFixef","gls", function( 
+R.methodsS3::setMethodS3("varFixef","gls", function( 
 		### Variance-Covariance of gls effects
 		object	##<< the fitted model
 		,...
@@ -60,7 +60,7 @@ setMethodS3("varFixef","gls", function(
 		##seealso<< \code{\link{twNlme-package}}
 	})
 
-setMethodS3("fixef","gls", function( 
+R.methodsS3::setMethodS3("fixef","gls", function( 
 		### Fixed effects, i.e. coefficients of gls model
 		object	##<< the fitted model
 		,...
@@ -69,7 +69,7 @@ setMethodS3("fixef","gls", function(
 		### named numeric vector
 		##seealso<< \code{\link{twNlme-package}}
 	})
-setMethodS3("ranef","gls", function( 
+R.methodsS3::setMethodS3("ranef","gls", function( 
 		### Random effects, i.e. none, of gls model
 		object	##<< the fitted model
 		,...
@@ -78,7 +78,7 @@ setMethodS3("ranef","gls", function(
 		### numeric(0)
 		##seealso<< \code{\link{twNlme-package}}
 	})
-setMethodS3("seFixef","lme", function( 
+R.methodsS3::setMethodS3("seFixef","lme", function( 
 		### Standard error of fixed effects 
 		object	##<< the fitted model
 		,...
@@ -87,7 +87,7 @@ setMethodS3("seFixef","lme", function(
 		### named numeric vector
 		##seealso<< \code{\link{twNlme-package}}
 	})
-setMethodS3("seFixef","gls", function( 
+R.methodsS3::setMethodS3("seFixef","gls", function( 
 		### Standard error of coefficients 
 		object	##<< the fitted model
 		,...

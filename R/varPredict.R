@@ -340,7 +340,7 @@ attr(.extractRandomList,"ex") <- function(){
 
 expandLinFormula <- function( 
 	### Extends the linear formula to an expression involving coefficients
-	linForm		##<< formula for fixed coefficients depending on linear term see \code{\link{.extractFixedList}}
+	linForm		##<< formula for fixed coefficients depending on linear term 
 	, suffix="" ##<< base parameter name
 	, varNames=NULL	##<< variable names to use
 ){
