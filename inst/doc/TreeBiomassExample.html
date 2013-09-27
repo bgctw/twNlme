@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>An Introduction to <strong>twNlme</strong> package</title>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: rgb(88, 72, 246)
+   }
+
+   pre .number {
+     color: rgb(0, 0, 205);
+   }
+
+   pre .comment {
+     color: rgb(76, 136, 107);
+   }
+
+   pre .keyword {
+     color: rgb(0, 0, 255);
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: rgb(3, 106, 7);
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+<!-- MathJax scripts -->
+<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{An Introduction to the twNlme package}
+-->
+
+<h1>An Introduction to <strong>twNlme</strong> package</h1>
+
+<h2>Introduction</h2>
+
+<p>The <strong>twNlme</strong> is an extension of the <strong>nlme</strong> package that </p>
+
+<ul>
+<li>unifies the usage of gnls and nlme</li>
+<li>helps with calculating prediction uncertainty including that of fixed and random effects</li>
+</ul>
+
+<h2>Tree biomass example</h2>
+
+<h3>The Data and the allometric model</h3>
+
+<p>Diameter <code>dbh</code> (cm) and stem biomass (kg) of trees of in the dataset <code>Wutzler08BeechStem</code> have been reported by different authors.</p>
+
+<p>We have to deal with heteroscedastic errors. The variance increases with diameter and stem biomass.</p>
+
+<p>Furthermore, trees have been measured at different locations and with slightly different methods.
+Hence, there are groupings in the data, and the records of one study are not independent of each other. </p>
+
+<pre><code class="r">library(twNlme)
+</code></pre>
+
+<pre><code class="r">data(Wutzler08BeechStem)
+head(Wutzler08BeechStem)
+</code></pre>
+
+<pre><code>##      author stand alt si age stockden  dbh height  stem
+## 1 Bartelink    28  23 36  20    1.414  8.4   9.80 16.50
+## 2 Bartelink    28  23 36  20    1.819  9.9  11.25 22.80
+## 3 Bartelink    28  23 36  20    2.411 10.7   9.70 24.70
+## 4 Bartelink    29  23 36  21    1.668 10.6   9.75 22.40
+## 5 Bartelink    29  23 36  21    1.705 10.7   9.30 21.30
+## 6 Bartelink    29  23 36  21    0.602  7.0   8.40  9.41
+</code></pre>
+
+<pre><code class="r">ds &lt;- Wutzler08BeechStem[order(Wutzler08BeechStem$dbh), ]
+plot(stem ~ dbh, col = author, data = ds, xlab = &quot;dbh [cm]&quot;, ylab = &quot;&quot;)
+mtext(&quot;stem biomass [kg]&quot;, 2, 2.8, las = 0)
+legend(&quot;topleft&quot;, inset = c(0.01, 0.01), levels(ds$author), col = 1:13, pch = 1)
+</code></pre>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAY0AAAEUCAMAAADgEJpoAAAAyVBMVEX9/v0AAAAAADkAAGUAAP8AOWUAOY8AZo8AZrUAzQAA//85AAA5ADk5AGU5OQA5OWU5OY85ZmU5Zo85ZrU5j485j7U5j9plAABlADllAGVlOQBlOTllOY9lZgBlZjllZmVlZrVltf2POQCPOTmPOWWPZgCPZo+Pj2WPj9qPtY+P27WP29qP2/21ZgC1Zjm1tWW124+1/rW1/tq1/v2+vr7ajznaj2Xa24/a/rXa/tra/v39tWX924/9/rX9/tr9/v3/AAD/AP///wBmAj6aAAAAQ3RSTlP///////////////////////////////////////////////////////////////////////////////////8A////smXtkwAAAAlwSFlzAAALEgAACxIB0t1+/AAAE2tJREFUeJztnQtj27YRx8s8XEtO2mzN5CXN1krO1mWTujSOltaSRSnf/0MNd3jzCZAACRL4t4xkWnwYPx0OOAK4b/KkcPTN2DeQpCjRCEl2NLIkf7KnYfXpJBslGiGpG42hrDY2daTh5V7K14lNiUZISjRCUqIxrp49e6b8lGiMqmdsY0o0RlWiEZISjaCU/MZo0ou+QonGcCpUSxVySeN4AwGNtbbr5b18J3843W2NrjMv+aehxpOwtI8v1ILWaMjdiUa1etLQfsACh4IGI1nnx+/fElZP7x9vyT/MNo6v/gG/Ih86ba4eWq8zM/n2G2Uax1cPj3/dYuHfrHHXbpXvrzmNm1V+uHogNMje9uvEJqc00G/Qr/zjG3QTZAM29CfmOsh2uvuuDUaiYXxEg984bYgb30ENxWncks882eo0Nq/fNddTiYb5ETVtKnTUu/Xj7TqXJU/sgv1StY3tPtVUZTmnQSomLPIXW1by4DeIqyjSaG1WJRqmR7T0N/ZZ9vztGkr+tME21ZNtyTb0Jm/NdWJT6ouHpEQjJCUaISnRCEmJRkhKNEJSJY0DdKVJ1+EWwxz6i11EveedxaYqGtAT2F9jjKP0UqRxPp+14woR9Z53FpvqaioW0ii9FGic2caPwYg66+Idv3+LXb/nP25zFlWHPTZ3FpvqaEAM/NUDxjm0Fz4imn2sTIN8jtO4gfjhKj+QnjiLqt9YVGOJBtfxhpTg4QrL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" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" style="display:block; margin: auto" style="display: block; margin: auto auto auto 0;" /></p>
+
+<p>The objective is to estimate stem biomass and of forests based on  measured tree diameters. </p>
+
+<p>The functional relationship can be described by an allometric equation: \(y = \beta_0 d^{\beta_1}\). 
+Where \(y\) is the stem biomass, \(d\) is the diameter, and \(\beta_i\) are estimated model coefficients.</p>
+
+<p>A log-transformation yields a linear form. And the plot reveals a similar slope between authors but differences in the intercept: \(log(y) = log(\beta_0) +  {\beta_1} log(d)\).</p>
+
+<pre><code class="r">plot(log(stem) ~ log(dbh), col = author, data = subset(ds, dbh &gt;= 7))
+</code></pre>
+
+<p><img src="data:image/png;base64,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" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" style="display:block; margin: auto" style="display: block; margin: auto auto auto 0;" /></p>
+
+<h3>Ignore the grouping structure</h3>
+
+<p>First, the data is fitted with ignoring the grouping stucture, which leads to a severe underestimation of uncertainty of aggregated stem biomass predictions.</p>
+
+<pre><code class="r">lm1 &lt;- lm(log(stem) ~ log(dbh), data = ds)
+.start &lt;- structure(c(exp(coef(lm1)[1]), coef(lm1)[2]), names = c(&quot;b0&quot;, &quot;b1&quot;))
+
+gm1 &lt;- gnls(stem ~ b0 * dbh^b1, data = ds, params = c(b0 + b1 ~ 1), start = .start, 
+    weights = varPower(form = ~fitted(.)))
+gm1
+</code></pre>
+
+<pre><code>## Generalized nonlinear least squares fit
+##   Model: stem ~ b0 * dbh^b1 
+##   Data: ds 
+##   Log-likelihood: -886.5
+## 
+## Coefficients:
+##     b0     b1 
+## 0.1034 2.4581 
+## 
+## Variance function:
+##  Structure: Power of variance covariate
+##  Formula: ~fitted(.) 
+##  Parameter estimates:
+## power 
+## 1.031 
+## Degrees of freedom: 187 total; 185 residual
+## Residual standard error: 0.2758
+</code></pre>
+
+<pre><code class="r">
+plot(stem ~ dbh, data = ds, xlab = &quot;dbh [cm]&quot;, ylab = &quot;&quot;)
+mtext(&quot;stem biomass [kg]&quot;, 2, 2.5, las = 0)
+lines(fitted(gm1) ~ dbh, data = ds, col = &quot;black&quot;, lwd = 2)
+
+sdEps &lt;- sqrt(varResidPower(gm1, pred = fitted(gm1)))
+gm1a &lt;- attachVarPrep(gm1, fVarResidual = varResidPower)
+sd &lt;- varPredictNlmeGnls(gm1a, newdata = ds)[, &quot;sdInd&quot;]
+lines(fitted(gm1) + sd ~ dbh, data = ds, col = &quot;grey&quot;)
+lines(fitted(gm1) - sd ~ dbh, data = ds, col = &quot;grey&quot;)
+</code></pre>
+
+<p><img src="data:image/png;base64,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" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" style="display:block; margin: auto" style="display: block; margin: auto auto auto 0;" /></p>
+
+<p>Note, the usage of function <code>varResidPower</code> to calculate uncertainty of the residuals that depends on the fitted values.</p>
+
+<p>In addition to residual variance <code>varResid</code>, there is prediction uncertainty due to uncertainty in model coefficients: <code>varFix</code>. This component is, however, 3 orders of magnitudes smaller. Hence, there the prediction uncertainty of the population <code>sdPop</code> is much smaller than the prediction uncertainty of an individual <code>sdInd</code>.</p>
+
+<pre><code class="r">apply(varPredictNlmeGnls(gm1a, newdata = ds), 2, median)
+</code></pre>
+
+<pre><code>##      fit   varFix   varRan varResid    sdPop    sdInd 
+##  125.890    9.202    0.000 1629.016    3.034   40.475
+</code></pre>
+
+<p>Note, the usage of function <code>varPredictNlmeGnls</code> to calculate variance due to uncertainty in model coefficients.
+It makes use of a Taylor approximation and needs to evaluate the derivatives of the statistical model at the predictor values. These derivative functions are symbolically derived before by calling function <code>attachVarPrep</code>.</p>
+
+<p>Now, we use the model to calculate stem biomass and its uncertainty for n=1000 trees with a diameter of about 30cm.</p>
+
+<pre><code class="r">n &lt;- 1000  # sum over n trees
+set.seed(815)
+dsNew &lt;- data.frame(dbh = rnorm(n, mean = 30, sd = 2), author = ds$author[1])
+yNew &lt;- predict(gm1a, newdata = dsNew)
+varNew &lt;- varPredictNlmeGnls(gm1a, newdata = dsNew)
+median(varNew[, &quot;sdInd&quot;]/yNew)  # on average each tree biomass with 33% uncertainty
+</code></pre>
+
+<pre><code>## [1] 0.3349
+</code></pre>
+
+<pre><code class="r">yAgg &lt;- sum(yNew)
+# completely independent:
+cvYAggRes &lt;- sqrt(sum(varNew[, &quot;varResid&quot;]))/yAgg  # only 1% uncertainty ?
+# indpendent but account for uncertainty in model coefficients
+varSumComp &lt;- varSumPredictNlmeGnls(gm1a, newdata = dsNew, retComponents = TRUE)
+cvYAggInd &lt;- varSumComp[&quot;sdPred&quot;]/yAgg  # 3.1%
+# dependent errors: add standard deviation
+cvYAggDep &lt;- sum(sqrt(varNew[, &quot;varResid&quot;]))/yAgg  # 33%: no decrease with increasing n
+structure(c(cvYAggRes, cvYAggInd, cvYAggDep) * 100, names = c(&quot;Residuals&quot;, &quot;Independent&quot;, 
+    &quot;Correlated&quot;))
+</code></pre>
+
+<pre><code>##   Residuals Independent  Correlated 
+##       1.069       3.302      33.369
+</code></pre>
+
+<pre><code class="r">varSumComp/(n * 10)
+</code></pre>
+
+<pre><code>##      pred    sdPred    varFix    varRan  varResid 
+##    44.849     1.481 19632.190     0.000  2300.348
+</code></pre>
+
+<p>With aggregating over n=1000 trees, the residual uncertainty <code>varResid</code> declines and the uncertainty of model coefficients <code>varFix</code> becomes more important. Accounting for model coefficients raises the coefficient of variation from 1% to 3%.</p>
+
+<p>However, we cannot treat the predictions as independent of each other.
+To be conservative we assumme that errors add up and report a cv of 33%.</p>
+
+<p>Note, how the aggregated uncertainty of model coefficients has been calculated by function 
+<code>varSumPredictNlmeGnls</code>. The calculation involves the evaluation of the derivative functions for each compination of
+predictors. Hence, it scales with \(O(n^2)\) and takes some time for large n. </p>
+
+<h3>Accounting for the grouping with mixed models</h3>
+
+<p>Now we refit the model using random effects in coefficient \(\beta_0\). I.e. we assume that it can vary between authors
+around a common central value. Additionally, we assume that increase in residual variance with stem biomass can differ between authors. </p>
+
+<p>\[
+y = ( \beta_0 + b_{0,k}) d^{\beta_1} + \epsilon 
+\]</p>
+
+<p>\[
+b_{0,k} \sim\ \mathcal{N}(0,\,\sigma_k^2)
+\]</p>
+
+<pre><code class="r">mm1 &lt;- nlme( stem ~ b0 * dbh^b1 
+        , data=ds 
+        , fixed=c(b0+b1~1)
+        , random=list(author=c(b0 ~1))
+        #, random=list(author=c(b1 ~1))
+        #, random=list(author=c(b0+b1 ~1))
+        , start=.start   
+        , weights=varPower(form = ~fitted(.)|author)
+)
+mm1
+</code></pre>
+
+<pre><code>## Nonlinear mixed-effects model fit by maximum likelihood
+##   Model: stem ~ b0 * dbh^b1 
+##   Data: ds 
+##   Log-likelihood: -828.9
+##   Fixed: c(b0 + b1 ~ 1) 
+##      b0      b1 
+## 0.09491 2.47957 
+## 
+## Random effects:
+##  Formula: b0 ~ 1 | author
+##              b0 Residual
+## StdDev: 0.02342   0.1942
+## 
+## Variance function:
+##  Structure: Power of variance covariate, different strata
+##  Formula: ~fitted(.) | author 
+##  Parameter estimates:
+##   Bartelink   Cienciala Duvigneaud1 Duvigneaud2   Heinsdorf     Le Goff 
+##      1.0442      1.0205      1.0670      1.1414      1.0113      0.8949 
+##       Masci    Matteuci      Vyskot 
+##      0.9773      1.0839      1.0422 
+## Number of Observations: 187
+## Number of Groups: 9
+</code></pre>
+
+<pre><code class="r">plot( stem~dbh, col=author, data=ds, xlab=&quot;dbh [cm]&quot;, ylab=&quot;&quot;)
+mtext( &quot;stem biomass [kg]&quot;, 2, 2.5, las=0)
+yds &lt;- predict(mm1, level=0) 
+lines( yds ~ dbh, data=ds, col=&quot;black&quot;, lwd=2)
+
+#authors &lt;- levels(ds$author)
+authors &lt;- c(&quot;Heinsdorf&quot;,&quot;Cienciala&quot;,&quot;Duvigneaud2&quot;)
+for( authorI in authors){
+    dsNa &lt;- ds; dsNa$author[] &lt;- authorI
+    try(lines( predict(mm1, level=1, newdata=dsNa) ~ dbh, data=dsNa, col=which(authorI == levels(ds$author)) ))
+}
+legend( &quot;topleft&quot;, inset=c(0.01,0.01), legend=c(sort(authors),&quot;Population&quot;), col=c(which(levels(ds$author) %in% authors),&quot;black&quot;), lty=1, lwd=c(rep(1,length(authors)),2) )
+
+#sd &lt;- sqrt( varResidPower(gm1, pred=predict(mm1, level=0)) )
+mm1a &lt;- attachVarPrep( mm1, fVarResidual=varResidPower)     # calculate symbolic derivatives used in variance prediction
+sd &lt;-varPredictNlmeGnls(mm1a, newdata=ds)[,&quot;sdInd&quot;]     # variance components
+lines( yds+sd ~ dbh, data=ds, col=&quot;grey&quot; )
+lines( yds-sd ~ dbh, data=ds, col=&quot;grey&quot; )
+</code></pre>
+
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAY0AAAEUCAMAAADgEJpoAAAArlBMVEX9/v0AAAAAADkAAGUAAP8AOWUAOY8AZo8AZrUAzQAA//85AAA5ADk5AGU5OWU5OY85ZmU5j485j9plAABlADllAGVlOQBlOTllOY9lZgBlZjllZmVltf2POQCPOTmPOWWPZgCPjzmPj2WPj9qPtY+P29qP2/21ZgC1Zjm124+1/rW1/tq1/v2+vr7ajzna24/a/rXa/tra/v39tWX924/9/rX9/tr9/v3/AAD/AP86ivFrAAAAOnRSTlP/////////////////////////////////////////////////////////////////////////AP//pFokagAAAAlwSFlzAAALEgAACxIB0t1+/AAAE6xJREFUeJztnQtj4yYSx6vddC9ydptrtrv3StLeXS++tpF7jZ1gf/8vdgwvgQQISYAQ4t9mbcc2Vvh5ZmB4fYOK0tE3S19AkaRCIyWNo1EVYTXKo5rfucwsdjyNUa/OVI3yqOZ3LvxONa2WCo1JSorGTHucacvLS4UhaMyFMZXGtA/zoBRpeDONQmOKQplGoTFFoUyj0Jggn6ZxdXUlPSo0xsujaVyxH/5OVGiMlFfTQIXGPPmMGoXGTPltUJW4MU8zTEOteo0KjZGaYRodt6RRDBrHqqo+vKDTp2fds+2vDS/offqimmMaKAEah/e4kvcYx5DWQGNO1EiBxusPT/jft4d7qOzXzxVmc7r9qaruETx69wS/Pt3A4/ae/dOX1KwGVfi4UevVvuDIrQIqe3+HDte4yu/g15gQvvn90zMAw8+exD37py+oYBkq9nYU2jaO1+wOq+zXL8/ECEjtI+Gf2K/pPfunL6hgGSr2dhSaxum2tQ3smirunDAN8gxhsK+wB2vv2T99OQU2jchxg33tu7bx+vmeeyp6z/7pyymwacRsU7G4caT38A/EjdOnXyiW08enk7hn//TlpKfhDUbs/gZpRXHbaNtUh6r69ut9e8/+6YsptGmUvvgYhTaNQmOEQsfwQmOMgptGoeGu8KZRaLgrvGkUGs6KYBp6GkfaH8YNUMgxqTfj++I3MEWw02h1SddSkU5Jm0pMhUYQGFoapN1/TeqhdzOBxicC1paYtQl/Lkklsi5hdjSUYk2eiqUxejcTaUC2ivb5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" title="plot of chunk nlmeFit" alt="plot of chunk nlmeFit" style="display:block; margin: auto" style="display: block; margin: auto auto auto 0;" /></p>
+
+<p>The uncertainty of a single prediction did not change. However, the variance across the populations by the authors <code>varRan</code> is now about as large as the residual variance <code>varResid</code>:</p>
+
+<pre><code class="r">apply(varPredictNlmeGnls(mm1a, newdata = ds), 2, median)
+</code></pre>
+
+<pre><code>##      fit   varFix   varRan varResid    sdPop    sdInd 
+##   122.99   108.49   920.79   771.94    32.08    42.44
+</code></pre>
+
+<p>This is significant, for the error propagation, because the uncertainty in model coefficients does not decrease with the number of measured trees. </p>
+
+<pre><code class="r">yNew &lt;- predict(mm1, newdata = dsNew, level = 0)
+yAgg &lt;- sum(yNew)
+(varSumCompM &lt;- varSumPredictNlmeGnls(mm1a, newdata = dsNew, retComponents = TRUE))
+</code></pre>
+
+<pre><code>##      pred    sdPred    varFix    varRan  varResid 
+## 4.431e+05 8.199e+04 7.286e+08 5.982e+09 1.117e+07
+</code></pre>
+
+<pre><code class="r">(cvAgg &lt;- varSumCompM[&quot;sdPred&quot;]/yAgg)  # 18% uncertainty
+</code></pre>
+
+<pre><code>## sdPred 
+##  0.185
+</code></pre>
+
+<p>When accounting for the groups, the uncertainty for the prediction of an unknown group of 18% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.</p>
+
+</body>
+
+</html>

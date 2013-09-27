@@ -1,0 +1,191 @@
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{An Introduction to the twNlme package}
+-->
+
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(out.extra='style="display:block; margin: auto"'
+    , fig.align="left"
+    , fig.width=4.6*1.2, fig.height=3.2*1.2, dev.args=list(pointsize=10)
+    )
+knit_hooks$set(spar = function(before, options, envir) {
+    if (before){
+        par( las=1 )                   #also y axis labels horizontal
+        par(mar=c(2.0,3.5,0,0)+0.3 )  #margins
+        par(tck=0.02 )                          #axe-tick length inside plots             
+        par(mgp=c(1.1,0.2,0) )  #positioning of axis title, axis labels, axis
+     }
+})
+```
+
+# An Introduction to **twNlme** package #
+
+## Introduction ##
+
+The **twNlme** is an extension of the **nlme** package that 
+* unifies the usage of gnls and nlme
+* helps with calculating prediction uncertainty including that of fixed and random effects
+
+
+## Tree biomass example ##
+
+### The Data and the allometric model ###
+
+Diameter `dbh` (cm) and stem biomass (kg) of trees of in the dataset `Wutzler08BeechStem` have been reported by different authors.
+
+We have to deal with heteroscedastic errors. The variance increases with diameter and stem biomass.
+
+Furthermore, trees have been measured at different locations and with slightly different methods.
+Hence, there are groupings in the data, and the records of one study are not independent of each other. 
+
+```{r , result='hide'}
+library(twNlme)
+```
+```{r, spar=TRUE}
+data(Wutzler08BeechStem)
+head(Wutzler08BeechStem)
+ds <- Wutzler08BeechStem[order(Wutzler08BeechStem$dbh),]
+plot( stem~dbh, col=author, data=ds, xlab="dbh [cm]", ylab="")
+mtext( "stem biomass [kg]", 2, 2.8, las=0)
+legend( "topleft", inset=c(0.01,0.01), levels(ds$author), col=1:13, pch=1 )
+```
+
+The objective is to estimate stem biomass and of forests based on  measured tree diameters. 
+
+The functional relationship can be described by an allometric equation: $y = \beta_0 d^{\beta_1}$. 
+Where $y$ is the stem biomass, $d$ is the diameter, and $\beta_i$ are estimated model coefficients.
+
+A log-transformation yields a linear form. And the plot reveals a similar slope between authors but differences in the intercept: $log(y) = log(\beta_0) +  {\beta_1} log(d)$.
+
+```{r , spar=TRUE}
+plot( log(stem)~log(dbh), col=author, data=subset(ds, dbh >= 7) )
+```
+
+### Ignore the grouping structure ###
+
+First, the data is fitted with ignoring the grouping stucture, which leads to a severe underestimation of uncertainty of aggregated stem biomass predictions.
+
+```{r , spar=TRUE}
+lm1 <- lm( log(stem)~log(dbh), data=ds )
+.start <- structure( c( exp(coef(lm1)[1]), coef(lm1)[2] ), names=c("b0","b1")) 
+
+gm1 <- gnls( stem ~ b0 * dbh^b1 
+    , data=ds 
+    , params=c(b0+b1~1)
+    , start=.start   
+    , weights=varPower(form = ~fitted(.))
+)
+gm1
+
+plot( stem~dbh, data=ds, xlab="dbh [cm]", ylab="")
+mtext( "stem biomass [kg]", 2, 2.5, las=0)
+lines( fitted(gm1) ~ dbh, data=ds, col="black", lwd=2 )
+
+sdEps <- sqrt( varResidPower(gm1, pred=fitted(gm1)) )
+gm1a <- attachVarPrep(gm1, fVarResidual=varResidPower)
+sd <- varPredictNlmeGnls(gm1a, newdata=ds)[,"sdInd"] 
+lines( fitted(gm1)+sd ~ dbh, data=ds, col="grey" )
+lines( fitted(gm1)-sd ~ dbh, data=ds, col="grey" )
+```
+Note, the usage of function `varResidPower` to calculate uncertainty of the residuals that depends on the fitted values.
+
+In addition to residual variance `varResid`, there is prediction uncertainty due to uncertainty in model coefficients: `varFix`. This component is, however, 3 orders of magnitudes smaller. Hence, there the prediction uncertainty of the population `sdPop` is much smaller than the prediction uncertainty of an individual `sdInd`.
+  
+```{r , spar=TRUE}
+apply( varPredictNlmeGnls(gm1a, newdata=ds), 2, median )
+```
+Note, the usage of function `varPredictNlmeGnls` to calculate variance due to uncertainty in model coefficients.
+It makes use of a Taylor approximation and needs to evaluate the derivatives of the statistical model at the predictor values. These derivative functions are symbolically derived before by calling function `attachVarPrep`.
+
+Now, we use the model to calculate stem biomass and its uncertainty for n=1000 trees with a diameter of about 30cm.
+
+```{r predictNoGroup, spar=TRUE, cache=TRUE}
+n <- 1000      # sum over n trees
+set.seed(0815)
+dsNew <- data.frame(dbh=rnorm(n, mean=30, sd=2), author=ds$author[1])
+yNew <- predict(gm1a, newdata=dsNew )
+varNew <- varPredictNlmeGnls(gm1a, newdata=dsNew)
+median( varNew[,"sdInd"]/yNew )       # on average each tree biomass with 33% uncertainty
+yAgg <- sum(yNew)
+# completely independent:
+cvYAggRes <- sqrt( sum(varNew[,"varResid"]) ) /yAgg       # only 1% uncertainty ?
+# indpendent but account for uncertainty in model coefficients
+varSumComp <- varSumPredictNlmeGnls(gm1a, newdata=dsNew, retComponents = TRUE)
+cvYAggInd <- varSumComp["sdPred"]/yAgg       # 3.1%
+# dependent errors: add standard deviation
+cvYAggDep <- sum( sqrt(varNew[,"varResid"]) ) /yAgg       # 33%: no decrease with increasing n
+structure( c( cvYAggRes, cvYAggInd, cvYAggDep )*100, names=c("Residuals","Independent","Correlated"))
+varSumComp/(n*10)
+```
+
+With aggregating over n=1000 trees, the residual uncertainty `varResid` declines and the uncertainty of model coefficients `varFix` becomes more important. Accounting for model coefficients raises the coefficient of variation from 1% to 3%.
+
+However, we cannot treat the predictions as independent of each other.
+To be conservative we assumme that errors add up and report a cv of 33%.
+
+Note, how the aggregated uncertainty of model coefficients has been calculated by function 
+`varSumPredictNlmeGnls`. The calculation involves the evaluation of the derivative functions for each compination of
+predictors. Hence, it scales with $O(n^2)$ and takes some time for large n. 
+
+### Accounting for the grouping with mixed models ###
+
+Now we refit the model using random effects in coefficient $\beta_0$. I.e. we assume that it can vary between authors
+around a common central value. Additionally, we assume that increase in residual variance with stem biomass can differ between authors. 
+
+$$latex
+y = ( \beta_0 + b_{0,k}) d^{\beta_1} + \epsilon 
+$$
+
+$$latex
+b_{0,k} \sim\ \mathcal{N}(0,\,\sigma_k^2)
+$$
+
+```{r nlmeFit, spar=TRUE, cache=TRUE}
+mm1 <- nlme( stem ~ b0 * dbh^b1 
+        , data=ds 
+        , fixed=c(b0+b1~1)
+        , random=list(author=c(b0 ~1))
+        #, random=list(author=c(b1 ~1))
+        #, random=list(author=c(b0+b1 ~1))
+        , start=.start   
+        , weights=varPower(form = ~fitted(.)|author)
+)
+mm1
+plot( stem~dbh, col=author, data=ds, xlab="dbh [cm]", ylab="")
+mtext( "stem biomass [kg]", 2, 2.5, las=0)
+yds <- predict(mm1, level=0) 
+lines( yds ~ dbh, data=ds, col="black", lwd=2)
+
+#authors <- levels(ds$author)
+authors <- c("Heinsdorf","Cienciala","Duvigneaud2")
+for( authorI in authors){
+    dsNa <- ds; dsNa$author[] <- authorI
+    try(lines( predict(mm1, level=1, newdata=dsNa) ~ dbh, data=dsNa, col=which(authorI == levels(ds$author)) ))
+}
+legend( "topleft", inset=c(0.01,0.01), legend=c(sort(authors),"Population"), col=c(which(levels(ds$author) %in% authors),"black"), lty=1, lwd=c(rep(1,length(authors)),2) )
+
+#sd <- sqrt( varResidPower(gm1, pred=predict(mm1, level=0)) )
+mm1a <- attachVarPrep( mm1, fVarResidual=varResidPower)     # calculate symbolic derivatives used in variance prediction
+sd <-varPredictNlmeGnls(mm1a, newdata=ds)[,"sdInd"]     # variance components
+lines( yds+sd ~ dbh, data=ds, col="grey" )
+lines( yds-sd ~ dbh, data=ds, col="grey" )
+```
+
+The uncertainty of a single prediction did not change. However, the variance across the populations by the authors `varRan` is now about as large as the residual variance `varResid`:
+```{r , spar=TRUE}
+apply( varPredictNlmeGnls(mm1a, newdata=ds), 2, median )
+```
+
+This is significant, for the error propagation, because the uncertainty in model coefficients does not decrease with the number of measured trees. 
+
+```{r predictGroup, spar=TRUE, cache=TRUE}
+yNew <- predict(mm1, newdata=dsNew, level=0 )
+yAgg <- sum(yNew)
+(varSumCompM <- varSumPredictNlmeGnls(mm1a, newdata=dsNew, retComponents = TRUE))
+(cvAgg <- varSumCompM["sdPred"] / yAgg )     # 18% uncertainty
+```
+
+When accounting for the groups, the uncertainty for the prediction of 1000 trees of an unknown group of 18% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.
+ 
