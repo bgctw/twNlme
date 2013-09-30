@@ -184,8 +184,44 @@ This is significant, for the error propagation, because the uncertainty in model
 yNew <- predict(mm1, newdata=dsNew, level=0 )
 yAgg <- sum(yNew)
 (varSumCompM <- varSumPredictNlmeGnls(mm1a, newdata=dsNew, retComponents = TRUE))
-(cvAgg <- varSumCompM["sdPred"] / yAgg )     # 18% uncertainty
+(cvAgg <- varSumCompM["sdPred"] / yAgg )     # 26% uncertainty
 ```
 
-When accounting for the groups, the uncertainty for the prediction of 1000 trees of an unknown group of 18% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.
+When accounting for the groups, the uncertainty for the prediction of 1000 trees of an unknown group of 26% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.
+ 
+
+
+### Alternative: bootstrap aggregated uncertainty ###
+
+An alternative way of calculating the uncertainty of the aggregated value, the sum of biomass of n trees, is to apply a bootstrap. 
+For `nBoot` times random realizations are drawn for fixed effects and for the random effects.
+
+For each sample, the tree biomass and its sum is calculated. At the end, we obtain a distribution of the aggregated value and can obtain and uncertainty estimate from it.
+
+This way is requires a bit more programming, specific to the used model, but is faster for large `n`. It confirmes our previous uncertainty estimate of 26%.
+
+Note the usage of functions `varFixef` and `varRanef`, that extract the covariance matrix of fixed and random effects from the model object. 
+
+```{r bootstrap}
+require(mnormt)     # multivariate normal
+nBoot <- 400
+
+beta <- rmnorm(nBoot, fixef(mm1), varFixef(mm1) )       # random realizations of fixed effects
+b0 <- rnorm(nBoot, 0 , sqrt(varRanef(mm1)) )            # random realizations of b0
+ # extract the coefficients of heteroscadistic varaicne model 
+sigma0 <- mm1$sigma                                      
+delta <- mean( coef(mm1$modelStruct$varStruct,uncons = FALSE, allCoef = TRUE), nBoot, replace=TRUE)
+ # do the bootstrap
+res <- sapply( 1:nBoot, function(i){
+            yNewP <- (beta[i,"b0"]+b0[i]) * dsNew$dbh^(beta[i,"b1"])
+            sigma <- sigma0 * yNewP^delta
+            eps <- rnorm( nrow(dsNew), 0, sigma)                      # random realizations of resiudal base
+            yNewT <- yNewP +eps
+            yAggi <- sum(yNewT)
+        })
+sd(res)/yAgg        # confirms cv=26%
+```
+
+
+ 
  

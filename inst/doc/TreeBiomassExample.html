@@ -436,17 +436,51 @@ yAgg &lt;- sum(yNew)
 </code></pre>
 
 <pre><code>##      pred    sdPred    varFix    varRan  varResid 
-## 4.431e+05 8.199e+04 7.286e+08 5.982e+09 1.117e+07
+## 4.431e+05 1.158e+05 1.456e+09 1.195e+10 1.117e+07
 </code></pre>
 
-<pre><code class="r">(cvAgg &lt;- varSumCompM[&quot;sdPred&quot;]/yAgg)  # 18% uncertainty
+<pre><code class="r">(cvAgg &lt;- varSumCompM[&quot;sdPred&quot;]/yAgg)  # 26% uncertainty
 </code></pre>
 
 <pre><code>## sdPred 
-##  0.185
+## 0.2614
 </code></pre>
 
-<p>When accounting for the groups, the uncertainty for the prediction of an unknown group of 18% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.</p>
+<p>When accounting for the groups, the uncertainty for the prediction of 1000 trees of an unknown group of 26% is much higher than the uncertainty of 3.3% estimated by ignoring the groups.</p>
+
+<h3>Alternative: bootstrap aggregated uncertainty</h3>
+
+<p>An alternative way of calculating the uncertainty of the aggregated value, the sum of biomass of n trees, is to apply a bootstrap. 
+For <code>nBoot</code> times random realizations are drawn for fixed effects and for the random effects.</p>
+
+<p>For each sample, the tree biomass and its sum is calculated. At the end, we obtain a distribution of the aggregated value and can obtain and uncertainty estimate from it.</p>
+
+<p>This way is requires a bit more programming, specific to the used model, but is faster for large <code>n</code>. It confirmes our previous uncertainty estimate of 26%.</p>
+
+<p>Note the usage of functions <code>varFixef</code> and <code>varRanef</code>, that extract the covariance matrix of fixed and random effects from the model object. </p>
+
+<pre><code class="r">require(mnormt)  # multivariate normal
+nBoot &lt;- 400
+
+beta &lt;- rmnorm(nBoot, fixef(mm1), varFixef(mm1))  # random realizations of fixed effects
+b0 &lt;- rnorm(nBoot, 0, sqrt(varRanef(mm1)))  # random realizations of b0
+# extract the coefficients of heteroscadistic varaicne model
+sigma0 &lt;- mm1$sigma
+delta &lt;- mean(coef(mm1$modelStruct$varStruct, uncons = FALSE, allCoef = TRUE), 
+    nBoot, replace = TRUE)
+# do the bootstrap
+res &lt;- sapply(1:nBoot, function(i) {
+    yNewP &lt;- (beta[i, &quot;b0&quot;] + b0[i]) * dsNew$dbh^(beta[i, &quot;b1&quot;])
+    sigma &lt;- sigma0 * yNewP^delta
+    eps &lt;- rnorm(nrow(dsNew), 0, sigma)  # random realizations of resiudal base
+    yNewT &lt;- yNewP + eps
+    yAggi &lt;- sum(yNewT)
+})
+sd(res)/yAgg  # confirms cv=26%
+</code></pre>
+
+<pre><code>## [1] 0.2696
+</code></pre>
 
 </body>
 

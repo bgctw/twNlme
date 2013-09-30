@@ -1,13 +1,13 @@
 Package: twNlme
 Title: Standard errors for basic nlme and gnls model predictions
-Version: 1.1
-Date: 2013-09-27
+Version: 1.2.1
+Date: 2013-09-30
 Author: Thomas Wutzler
 Maintainer: Thomas Wutzler <twutz@bgc-jena.mpg.de>
 Description: Standard errors for basic nlme and gnls model predictions
 License: GPL-2
 LazyLoad: yes
 Depends: R (>= 1.10.0), nlme
-Suggests: knitr
+Suggests: knitr, mnormt
 Imports: R.methodsS3
 VignetteBuilder: knitr

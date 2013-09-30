@@ -641,10 +641,10 @@ varSumPredictNlmeGnls <- function(
 				#+covar(i,i)
 				resFix <- resFix + ( t(uNew[i,]) %*% tmpFixVar %*% uNew[i,] )*reps[i]
 				resRan <- resRan + ( t(wNew[i,]) %*% tmpRanVar %*% wNew[i,] )*reps[i]
-				#+covar(i,j)+covar(j,i)=2*covar(i,j)
+				#+covar(i,j)+covar(j,i)=2*covar(i,j)            # symmetric, hence factor 2 and only from i+1
 				for( j in (i+1):n ){
-					resFix <- resFix + ( t(uNew[i,]) %*% tmpFixVar %*% uNew[j,] )*reps[i]*reps[j]
-					resRan <- resRan + ( t(wNew[i,]) %*% tmpRanVar %*% wNew[j,] )*reps[i]*reps[j]
+					resFix <- resFix + 2*( t(uNew[i,]) %*% tmpFixVar %*% uNew[j,] )*reps[i]*reps[j]
+					resRan <- resRan + 2*( t(wNew[i,]) %*% tmpRanVar %*% wNew[j,] )*reps[i]*reps[j]
 				}#for j
 			}#for i
 		}#n>1
