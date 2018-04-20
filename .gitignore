@@ -3,3 +3,8 @@
 .RData
 .Ruserdata
 rstudio.Rproj
+readme.txt
+README.*
+scratch
+vignettes/cache/
+

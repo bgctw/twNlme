@@ -11,5 +11,8 @@ S3method(varFixef,lme)
 S3method(varRanef,gls)
 S3method(varRanef,lme)
 
-#useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code 
+importFrom("stats", "as.formula", "coef", "deriv", "formula",
+             "predict", "terms")
+
+#useDynLib(ProjectsDllBaseName)	# only required when supplying C or FORTRAN code
 

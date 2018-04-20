@@ -1,6 +1,6 @@
 .setUp <-function () {
-	data(Wutzler08BeechStem)
-	data(modExampleStem)
+	#data(Wutzler08BeechStem)
+	#data(modExampleStem)
 	vars <- list(nData = head(Wutzler08BeechStem))
 	attach(vars)
 }
@@ -10,7 +10,7 @@
 }
 
 test..gsubFormTerm <- function(){
-	formTerms <- c("I(si + alt):log(age)","age +I(si + alt)","SI(si + alt):log(age)") 
+	formTerms <- c("I(si + alt):log(age)","age +I(si + alt)","SI(si + alt):log(age)")
 	#gsub("\\bI\\(","\\1\\(",formTerms)
 	res <- try( .gsubFormTerm(formTerms) )
 	if( inherits(res,"try-error"))
@@ -21,7 +21,7 @@ test..gsubFormTerm <- function(){
 test.basemodel <- function(){
 	nFit <- modExampleStem
 	pnFit <- attachVarPrep(nFit, fVarResidual=varResidPower)
-	resNlme <- varPredictNlmeGnls(pnFit,nData)	
+	resNlme <- varPredictNlmeGnls(pnFit,nData)
 	checkTrue( all(resNlme > 0))
 }
 
@@ -31,12 +31,12 @@ test.IinFormula <- function(){
 	comp <- compb <- nFit$plist[[1]]
 	try({
 			(termVec <- .extractFixedList(nFit, excludeIntercept=TRUE)[[1]])
-			(formRes <- .constructLinFormulaString(termVec, "b0")) 
+			(formRes <- .constructLinFormulaString(termVec, "b0"))
 			grad <- deriv(parse(text=formRes$form), formRes$coefNames)
 			tmp <- with( tail(Wutzler08BeechStem), with( as.list({tmp<-fixef(nFit);names(tmp)<-formRes$coefNames;tmp}), eval( grad) ))
 		})
 	pnFit <- attachVarPrep(nFit, fVarResidual=varResidPower)
-	resNlme <- varPredictNlmeGnls(pnFit,nData)	
+	resNlme <- varPredictNlmeGnls(pnFit,nData)
 	checkTrue( all(resNlme > 0))
 }
 
@@ -50,7 +50,7 @@ test.sumFormula <- function(){
 	})
 	pnFit <- attachVarPrep(nFit, fVarResidual=varResidPower)
 	#str(pnFit$varPrep)
-	resNlme <- varPredictNlmeGnls(pnFit,nData)	
+	resNlme <- varPredictNlmeGnls(pnFit,nData)
 	checkTrue( all(resNlme > 0))
 }
 
@@ -75,17 +75,17 @@ test.categorial <- function(){
 	#tmp.f <- pnFit$varPrep$gradFix; mtrace(tmp.f); pnFit$varPrep$gradFix <- tmp.f
 	#mtrace(varPredictNlmeGnls)
 	nData$author <- factor("Cienciala", levels=levels(Wutzler08BeechStem$author) )
-	resNlme <- varPredictNlmeGnls(pnFit,nData)	
+	resNlme <- varPredictNlmeGnls(pnFit,nData)
 	checkTrue( all(resNlme > 0))
-	
+
 }
 
 t_est.formula <- function(){
 	# test wheter formula can be retrieved, even if call includes a variable
 	# works when executed from workspace
-	# fails on RCheck 
-	data(Wutzler08BeechStem)
-	
+	# fails on RCheck
+	#data(Wutzler08BeechStem)
+
 	lmStart <- lm(log(stem) ~ log(dbh) + log(height), Wutzler08BeechStem )
 	tmpForm <- stem~b0*dbh^b1*height^b2
 	nlmeFit <- nlme( tmpForm, data=Wutzler08BeechStem
@@ -97,21 +97,21 @@ t_est.formula <- function(){
 	)
 	formula(nlmeFit)
 	summary(nlmeFit)
-	
+
 #---- some artificial data for new prediction
 	nData <- data.frame( dbh=tmp <- seq(2,80,length.out=40), alt=median(Wutzler08BeechStem$alt), si=median(Wutzler08BeechStem$si) )
 	lmHeight <- lm( height ~ dbh, Wutzler08BeechStem)
 	nData$height <- predict(lmHeight, nData)
 	lmAge <- lm( age ~ dbh, Wutzler08BeechStem)
 	nData$age <- predict(lmAge, nData)
-	
+
 #---- do the prediction including variance calculation
 # automatic derivation with accounting for residual variance model
 	#mtrace(attachVarPrep)
 	nlmeFit <- attachVarPrep(nlmeFit, fVarResidual=varResidPower)
-	resNlme <- varPredictNlmeGnls(nlmeFit,nData)	
+	resNlme <- varPredictNlmeGnls(nlmeFit,nData)
 	checkTrue( all(resNlme > 0))
-	
+
 }
 
 

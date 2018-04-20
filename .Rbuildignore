@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^readme.txt$
+^README.*$
+^scratch$
+^vignettes/cache$
+^vignettes/figure$

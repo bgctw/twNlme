@@ -8,22 +8,22 @@ varPredictNlmeGnls <- function(
 	## Variance calculation is based on Taylor series expansion as described in appendix A1 by Wutzler08.
 	##
 	## Fitted \code{object} needs to be prepared by function \code{\link{attachVarPrep}}.
-	## If not done before, this function is called automatically within \code{varPredictNlmeGnls}. 
+	## If not done before, this function is called automatically within \code{varPredictNlmeGnls}.
 	## However, for finetuning or avoiding overhead in repeated calls, it
 	## is recommended to explicitely call \code{\link{attachVarPrep}} before calling \code{varPredictNlmeGnls}.
-	
+
 	##references<<
-	## Wutzler, T.; Wirth, C. & Schumacher, J. (2008) 
-	## Generic biomass functions for Common beech (Fagus sylvatica L.) in Central Europe - predictions and components of uncertainty. 
+	## Wutzler, T.; Wirth, C. & Schumacher, J. (2008)
+	## Generic biomass functions for Common beech (Fagus sylvatica L.) in Central Europe - predictions and components of uncertainty.
 	## Canadian Journal of Forest Research, 38, 1661-1675
 
 	##seealso<< \code{\link{varSumPredictNlmeGnls}}, \code{\link{twNlme-package}}
-	
+
 	pred <- predict( object, newdata, level=0, ...)	# the population level predictions at newdata
 	if( !inherits(object,"nlmeVarPrep") )
 		object <- attachVarPrep(object)
 	#tmpf <- object$varPrep$gradFix; mtrace(tmpf); tmpf(newdata)
-	newdata <- object$varPrep$fAddDummies(newdata)	# add dummy columns for categorial variables used in gradFix and gradRan 
+	newdata <- object$varPrep$fAddDummies(newdata)	# add dummy columns for categorial variables used in gradFix and gradRan
 	uNew <- object$varPrep$gradFix(object, newdata, pred)
 	varFix <- varFixef(object)
 	vcFix <- rep(0,nrow(newdata))
@@ -39,76 +39,85 @@ varPredictNlmeGnls <- function(
 		}
 		vcRan
 	}else rep(0,nrow(newdata))
-	vcResid <- object$varPrep$fVarResidual(object,newdata,pred)	
-	
+	vcResid <- object$varPrep$fVarResidual(object,newdata,pred)
+
 	#varSum <- vcFix + vcRan + vcResid
 	sdPop <- sqrt(vcFix+vcRan)
 	sdInd <- sqrt(vcFix+vcRan+vcResid)
 	res <- cbind( pred, vcFix, vcRan, vcResid, sdPop, sdInd )
-	##value<< numeric matrix with columns 
+	##value<< numeric matrix with columns
 	colnames(res) <- c(
 		fit="fit"				##<< predictions
-		,varFix="varFix"		##<< variance component due to uncertainty in fixed effects	
-		,varRan="varRan"		##<< variance component due to uncertainty in random effects	
+		,varFix="varFix"		##<< variance component due to uncertainty in fixed effects
+		,varRan="varRan"		##<< variance component due to uncertainty in random effects
 		,varResid="varResid"	##<< variance component due to residual error
 		,sdPop="sdPop"			##<< standard deviation of prediction of a new population
 		,sdInd="sdInd"			##<< standard deviation of prediction of a new individual
-	) 
+	)
 	##end<<
 	res
 }
 attr(varPredictNlmeGnls,"ex") <- function(){
-	#----  fit a nlme and gnls model to data of stem weights 
-	data(Wutzler08BeechStem)
-	
+	#----  fit a nlme and gnls model to data of stem weights
+	#data(Wutzler08BeechStem)
+
 	lmStart <- lm(log(stem) ~ log(dbh) + log(height), Wutzler08BeechStem )
 	nlmeFit <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
 				,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 				,random=  b0 ~ 1 | author
-				,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
+				,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0)
+				          , b1=as.numeric(coef(lmStart)[2])
+				          , b2=as.numeric(coef(lmStart)[3]) )
 				,weights=varPower(form=~fitted(.))
 				,method='REML'		# for unbiased error estimates
 			)
 	summary(nlmeFit)
 	x3 <- update(nlmeFit, fixed=list(b0 ~ si * log(age), b1+b2 ~ 1))
-	
+
 	gnlsFit <- gnls( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
 		,params = list(b0 ~ si + age + alt, b1~1, b2 ~ 1)
-		,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
+		,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0)
+		          , b1=as.numeric(coef(lmStart)[2])
+		          , b2=as.numeric(coef(lmStart)[3]) )
 		,weights=varPower(form=~fitted(.))
 	)
 	summary(gnlsFit)
 	fixef(gnlsFit)		# note the usage of fixef.gnls.
 	ranef(gnlsFit)		# note the usage of ranef.gnls.
-	
+
 	#---- some artificial data for new prediction
-	nData <- data.frame( dbh=tmp <- seq(2,80,length.out=40), alt=median(Wutzler08BeechStem$alt), si=median(Wutzler08BeechStem$si) )
+	nData <- data.frame(
+	  dbh=seq(2,80,length.out=40)
+	  , alt=median(Wutzler08BeechStem$alt)
+	  , si=median(Wutzler08BeechStem$si) )
 	lmHeight <- lm( height ~ dbh, Wutzler08BeechStem)
 	nData$height <- predict(lmHeight, nData)
 	lmAge <- lm( age ~ dbh, Wutzler08BeechStem)
 	nData$age <- predict(lmAge, nData)
-	
+
 	#---- do the prediction including variance calculation
 	# automatic derivation with accounting for residual variance model
 	nlmeFit <- attachVarPrep(nlmeFit, fVarResidual=varResidPower)
-	resNlme <- varPredictNlmeGnls(nlmeFit,nData)	
-	
+	resNlme <- varPredictNlmeGnls(nlmeFit,nData)
+
 	# plotting prediction and standard errors
 	plot( resNlme[,"fit"] ~ dbh, nData, type="l", xlim=c(40,80), lty="dashed")
 	lines( resNlme[,"fit"]+resNlme[,"sdPop"] ~ dbh, nData, col="maroon", lty="dashed" )
 	lines( resNlme[,"fit"]-resNlme[,"sdPop"] ~ dbh, nData, col="maroon", lty="dashed" )
 	lines( resNlme[,"fit"]+resNlme[,"sdInd"] ~ dbh, nData, col="orange", lty="dashed"  )
 	lines( resNlme[,"fit"]-resNlme[,"sdInd"] ~ dbh, nData, col="orange", lty="dashed" )
-	
+
 	#---- handling special model of residual weights
 	# here we fit different power coefficients for authors
 	# for the prediction we take the mean, but because it appears in a nonlinear term
 	# we need a correction term
-	.tmp.f <- function(){	# takes long, so do not execute each test time 
+	.tmp.f <- function(){	# takes long, so do not execute each test time
 		nlmeFitAuthor <- nlme( stem~b0*dbh^b1*height^b2, data=Wutzler08BeechStem
 			,fixed=list(b0 ~ si + age + alt, b1+b2 ~ 1)
 			,random=  b0 ~ 1 | author
-			,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0), b1=as.numeric(coef(lmStart)[2]), b2=as.numeric(coef(lmStart)[3]) )
+			,start=c( b0=c(as.numeric(exp(coef(lmStart)[1])),0,0,0)
+			          , b1=as.numeric(coef(lmStart)[2])
+			          , b2=as.numeric(coef(lmStart)[3]) )
 			,weights=varPower(form=~fitted(.)|author)
 		)
 		#pred <- predict(modExampleStem, newdata, level=0)
@@ -118,29 +127,30 @@ attr(varPredictNlmeGnls,"ex") <- function(){
 			delta <-  mean(deltaAuthor)
 			varDelta <- var(deltaAuthor)
 			sigma^2 * abs(pred)^(2*delta) * (1+2*log(abs(pred))^2*varDelta)
-		}	
+		}
 		#mtrace(varResidPowerAuthor)
-		nlmeFitResidAuthor <- attachVarPrep(nlmeFitAuthor, fVarResidual=varResidPowerAuthor)
+		nlmeFitResidAuthor <- attachVarPrep(
+		  nlmeFitAuthor, fVarResidual=varResidPowerAuthor)
 		resNlmeAuthor <- varPredictNlmeGnls(nlmeFitResidAuthor,nData)
 		AIC(nlmeFitResidAuthor)
 	}
-	
+
 	nlmeFit	#return for creating modExampleStem.RData
 }
 
 .tmp.f <- function(){
 	#mtrace(varPredictNlmeGnls)
-	gnlsFit <- attachVarPrep(gnlsFit, fVarResidual=varResidPowerFitted)	
+	gnlsFit <- attachVarPrep(gnlsFit, fVarResidual=varResidPowerFitted)
 	resGnls <- varPredictNlmeGnls(gnlsFit,nData)
 	lines( resGnls[,"fit"] ~ dbh, nData, type="l", col="gray")
 	lines( resGnls[,"fit"]+resGnls[,"sdPop"] ~ dbh, nData, col="blue" )
 	lines( resGnls[,"fit"]-resGnls[,"sdPop"] ~ dbh, nData, col="blue" )
 	lines( resGnls[,"fit"]+resGnls[,"sdInd"] ~ dbh, nData, col="orange" )
 	lines( resGnls[,"fit"]-resGnls[,"sdInd"] ~ dbh, nData, col="orange" )
-	
+
 	fit2 <- update(gnlsFit, weights=varPower(fixed=0.6))
 	tmp<-varPredictNlmeGnls(fit2,nData)
-	
+
 	form <- y ~ beta0 + beta1 * exp(beta2*x)
 	xDat <- cbind(beta0=1, beta1=2, beta2=-0.7, x=1:10)
 	newx <- as.data.frame(xDat)
@@ -164,38 +174,38 @@ attr(varPredictNlmeGnls,"ex") <- function(){
 	varRanef(fm2)
 }
 
-#, sdType = c(	##<< specify which kind of standard deviation is calculated (set single value to save minor computation time) 
+#, sdType = c(	##<< specify which kind of standard deviation is calculated (set single value to save minor computation time)
 #	##describe<<
 #	,population="population"	##<< sd for prediction of a new population
 #	,individual="individual"	##<< sd for prediction of a new individual
 #)##end<<
 
 .tmp.f <- function(){
-	
-	data(modExampleStem)
+
+	#data(modExampleStem)
 	nlmeFit2 <- update(modExampleStem, weights=NULL)
-	
-	
-	#plot(nlmeFit)	
+
+
+	#plot(nlmeFit)
 	#plot( stem ~ dbh, Wutzler08BeechStem, col=author )
 	#tmp<-order(Wutzler08BeechStem$dbh); lines(predict(nlmeFit, newdata=Wutzler08BeechStem[tmp,], level=0)~dbh[tmp],Wutzler08BeechStem)
 	#plot( fitted(gnlsFit) ~ I(fitted(gnlsFit)+resid(gnlsFit)) )
 	#abline(0,1,col="gray")
 	#points( fitted(nlmeFit) ~ I(fitted(nlmeFit)+resid(nlmeFit)), col="maroon" )
-	
-	data(modExampleStem)
+
+	#data(modExampleStem)
 	nfit <- attachVarPrep( modExampleStem, form = "b0*dbh^b1*height^b2")
 	#mtrace(varPredictNlmeGls)
 	varPredictNlmeGnls(nfit, newdata=data.frame(dbh=18.8, height=16.9, age=40, si=30, alt=470))
-	
-	data(Wutzler08BeechStem)
+
+	#data(Wutzler08BeechStem)
 	varPredictNlmeGnls(nfit, newdata=head(Wutzler08BeechStem))
-	
-	
+
+
 }
 
 .tmp.f <- function(){
-	data(modExampleStem)
+	#data(modExampleStem)
 	nfit <- modExampleStem
 	form <- "b0*d^b1*h^b2"
 }
@@ -225,14 +235,14 @@ varResidPower <- function(
 	names(catMap) <- categorialNames
 	for( cName in categorialNames){
 		tmpi <- grep(paste("^",cName,sep=""),termVec)
-		#catMap[cName] <- sub(paste(".*\\.",cName,"(.*)$",sep=""),"\\1", termVec[tmpi]) 
-		catMap[[cName]] <- sub(paste("^",cName,"(.*)$",sep=""),"\\1", termVec[tmpi]) 
+		#catMap[cName] <- sub(paste(".*\\.",cName,"(.*)$",sep=""),"\\1", termVec[tmpi])
+		catMap[[cName]] <- sub(paste("^",cName,"(.*)$",sep=""),"\\1", termVec[tmpi])
 	}
-	catMap	
+	catMap
 }
 
 .gsubFormTerm <- function(
-	### strip whitespace characters, remove "I", and replace ":" by "*" 
+	### strip whitespace characters, remove "I", and replace ":" by "*"
 	formTerm	##<< vector of strings representing a term in a formula
 ){
 	# \\b matches word boundaries sot ath SI(a) is not replaced
@@ -241,11 +251,11 @@ varResidPower <- function(
 
 .extractFixedComponent <- function(
 	### Extract the terms from pfit component
-	comp						##<< component  of list nlmefit$pfit 
+	comp						##<< component  of list nlmefit$pfit
 	, excludeIntercept=FALSE	##<< set to TRUE to exclude intercept, (e.g. not used for derivation)
 ){
 	termVec <- if( is.numeric(comp) ){
-		termVec <- .gsubFormTerm(colnames(comp))	
+		termVec <- .gsubFormTerm(colnames(comp))
 	}else{
 		termVec <- "(Intercept)"
 		#attr(termVec,"hasIntercept") <- TRUE
@@ -273,7 +283,7 @@ varResidPower <- function(
 	if(termVec[1] == "(Intercept)") termCoefVec[1] <- coefNames[1]
 	form <- paste( termCoefVec, collapse=" + ")
 	##value<<
-	list( 
+	list(
 		form=form				##<< the string of linear formula
 		, coefNames=coefNames 	##<< the names of the coefficients
 	)
@@ -282,7 +292,7 @@ varResidPower <- function(
 
 
 .asFormulaTermVec <- function(
-	### connect all the terms and parse expression 
+	### connect all the terms and parse expression
 	termVec
 ){
 	form <- paste("~", paste(termVec,collapse="+"))
@@ -291,13 +301,13 @@ varResidPower <- function(
 }
 
 
-.extractFixedList <- function( 
-	### extracts the fixed effect terms 
+.extractFixedList <- function(
+	### extracts the fixed effect terms
 	x					##<< the fitted nlme model
 	,makeNames=TRUE 	##<< whether to attach an explicit name attribute
 	,...				##<< further argument to \code{\link{.extractFixedComponent}}
 ){
-	isNlme <- inherits(x,"nlme") 
+	isNlme <- inherits(x,"nlme")
 	resString <- list()
 	catMap <- list()
 	for( parName in names(x$plist) ){
@@ -313,7 +323,7 @@ varResidPower <- function(
 	# list with entry for each parameter being a vector of strings for each term in the model formula
 }
 attr(.extractFixedList,"ex") <- function(){
-	data(modExampleStem)
+	#data(modExampleStem)
 	(tmp <- .extractFixedList(modExampleStem))
 	# see also runitvarPredictNlmeGnls.R
 }
@@ -329,20 +339,20 @@ attr(.extractFixedList,"ex") <- function(){
 		if( makeNames ){
 			names(ranF) <- as.character(lapply(ranF, function(elr){elr[[2]]} ))
 		}
-		#deparse(ranF, control=c("keepInteger") ) #no option showAttributes,"warnIncomplete" 
-		ranF 
+		#deparse(ranF, control=c("keepInteger") ) #no option showAttributes,"warnIncomplete"
+		ranF
 	}else{
 		list()
 	}
 }
 attr(.extractRandomList,"ex") <- function(){
-	data(modExampleStem)
+	#data(modExampleStem)
 	(tmp <- .extractRandomList(modExampleStem))
 }
 
-expandLinFormula <- function( 
+expandLinFormula <- function(
 	### Extends the linear formula to an expression involving coefficients
-	linForm		##<< formula for fixed coefficients depending on linear term 
+	linForm		##<< formula for fixed coefficients depending on linear term
 	, suffix="" ##<< base parameter name
 	, varNames=NULL	##<< variable names to use
 ){
@@ -373,8 +383,8 @@ expandLinFormula <- function(
 			termVec <- "(Intercept)"
 		}
 	}
-	# if names are given 
-	
+	# if names are given
+
 	attr(value,"coef") <- coef2
 	attr(value,"parBaseName") <- parBaseName
 	attr(value,"termVec") <- termVec
@@ -386,17 +396,17 @@ expandLinFormula <- function(
 attr(expandLinFormula,"ex") <- function(){
 	expandLinFormula(b0~1)
 	# note that si*age treated as multiplication instead of all interactions
-	expandLinFormula(linForm <- b0~si+log(age)+I(si+age)+si*age)	 
+	expandLinFormula(linForm <- b0~si+log(age)+I(si+age)+si*age)
 }
-#ex: fixF( string x$call$fixed, "b0" ) 
+#ex: fixF( string x$call$fixed, "b0" )
 #results in 'b0.0 + b0.1*si + b0r.1'
 #attributes coef and resp are attached listing all the fixed and random coefficients
 
 #getTerms( fixF, 4 )
 
-.fullNlmeCoefFormulas <- function( 
+.fullNlmeCoefFormulas <- function(
 	### extract the expanded linear formula with covariates and random effect for each parameter
-	nfit = NULL		##<< the fitted nlme object 
+	nfit = NULL		##<< the fitted nlme object
 	,fixedMap = .extractFixedList(nfit) 	# list of strings by coefficient
 	,randomMap = .extractRandomList(nfit)	# list of formulas by coefficient
 ){
@@ -428,7 +438,7 @@ attr(expandLinFormula,"ex") <- function(){
 		if( !is.null(randomMap[[ params[i] ]]) ){
 			#names are repeated from fixed effects, hence construct new names
 			#tmpNamesReplace <- ranefNames[ grep( paste("^",params[i],".",sep=""), ranefNames )]
-			terms(randomMap[[ params[i] ]])
+			#terms(randomMap[[ params[i] ]])
 			tmp <- expandLinFormula(randomMap[[ params[i] ]],suffix="r")
 			val = c( val, tmp )
 			pMaprc <- c( pMaprc, attr(tmp,"coef") )
@@ -436,7 +446,7 @@ attr(expandLinFormula,"ex") <- function(){
 		}
 		if( is.null(val) ) val = params[i]
 		val = paste( val, collapse="+" )
-		pMap <- c( pMap, x = val	)	
+		pMap <- c( pMap, x = val	)
 		names(pMap)[ length(pMap) ] = as.character(params[i])
 	}
 	#termsVecAll <- unique( c(unlist(fixedMap), termsVecAll) )
@@ -449,7 +459,7 @@ attr(expandLinFormula,"ex") <- function(){
 	### additional all the coefficient names are provided in attributes fixCoef and ranCoef
 }
 attr(.fullNlmeCoefFormulas,"ex") <- function(){
-	data(modExampleStem)
+	#data(modExampleStem)
 	#mtrace(.covarMap)
 	(tmp <- .fullNlmeCoefFormulas(modExampleStem))
 }
@@ -457,9 +467,9 @@ attr(.fullNlmeCoefFormulas,"ex") <- function(){
 attachVarPrep <- function(
 	### Attach partial derivative and residual variance functions to the nonlinear fitted object
 	object		##<< the fitted nlme object
-	,form = formula(object)  	##<< the formula used to fit the object, either formula or string used for automated derivation 
-	,fDerivFixef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to fixed effects at newdata 
-	,fDerivRanef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to random effects at newdata 
+	,form = formula(object)  	##<< the formula used to fit the object, either formula or string used for automated derivation
+	,fDerivFixef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to fixed effects at newdata
+	,fDerivRanef=NULL			##<< \code{function(nfit,newdata,pred)} of derivatives in respect to random effects at newdata
 	,fVarResidual=NULL			##<< \code{function(nfit,newdata,pred)} to calculate var(residual) at newdata
 	,fAddDummies=NULL			##<< \code{function(newdata)} see "Handling categorial variables"
 ){
@@ -467,7 +477,7 @@ attachVarPrep <- function(
 	## For usage with \code{\link{varPredictNlmeGnls}}, this function attaches to the fitted object \itemize{
 	## \item derivative functions
 	## \item residual variance function
-	## \item Variance-Covariance methods 
+	## \item Variance-Covariance methods
 	## }
 	## \describe{ \item{Automatic derivation}{
 	## If proper basic formula is given, \code{fDerivFixef} and \code{fDerivRanef} will be automatically derived from the model.
@@ -476,14 +486,14 @@ attachVarPrep <- function(
 
 	##details<<
 	## \describe{ \item{Handling of categorial variables}{
-	## item \code{fAddDummies=function(newdata)} of restult entry \code{varPrep} adds columns for dummy variables 
+	## item \code{fAddDummies=function(newdata)} of restult entry \code{varPrep} adds columns for dummy variables
 	## of categorial variables to newdata.
 	## Default implementation supports only (and assumes) \code{contr.treatment} coding.
-	## For other codings user must provide the function with argument \code{fAddDummies}. 
+	## For other codings user must provide the function with argument \code{fAddDummies}.
 	## }}
-	
+
 	##seealso<< \code{\link{twNlme-package}}
-	
+
 	fullFormula <- "user-specified"
 	if( is.null(fDerivFixef) | (0 < length(ranef(object) & is.null(fDerivRanef) )) ){
 		formStr <- if( inherits(form,c("formula","call","language")) ) deparse(form[[length(form)]]) else form
@@ -503,12 +513,12 @@ attachVarPrep <- function(
 		}
 		tmpf2str <- fullFormula <- gsub("I\\(","\\(",gsub(":", "*", tmpf1str))
 		tmpf <- as.formula(tmpf2str)
-		
+
 		fixCoefNames <- attr(cfForm,"fixCoef")
 		if( is.null(fixCoefNames) ) fixCoefNames <- names(fixef(object))
 		ranCoefNames <- attr(cfForm,"ranCoef")
 		if( is.null(ranCoefNames) ) ranCoefNames <- names(ranef(object))
-		
+
 		gradRanExp <- if( 0 < length(ranCoefNames) ){
 				deriv( tmpf, ranCoefNames )
 			}else{
@@ -517,7 +527,7 @@ attachVarPrep <- function(
 	}else{
 		if( is.null(fDerivRanef)) fDerivRanef <- expression(numeric(0))
 	}
-	
+
 	coefGradFixed <- {tmp <- fixef(object); names(tmp) <- fixCoefNames; as.list(tmp) }
 	coefGradRan <- as.list(structure( rep(0,length(ranCoefNames)), names=ranCoefNames))
 	coefGrad <- c(coefGradFixed,coefGradRan)
@@ -541,31 +551,31 @@ attachVarPrep <- function(
 					newdata[cValueVar] <- 0
 					newdata[[cValueVar]][ newdata[[cName]]==cValue ] <- 1
 				}
-			} 
+			}
 			newdata
-			### dataframe \code{newdata} with additional numeric columns for dummy variables either 0 and 1  
-		}	
+			### dataframe \code{newdata} with additional numeric columns for dummy variables either 0 and 1
+		}
 	}
 	gradFix <- if( !is.null(fDerivFixef) ) fDerivFixef else {
 		 gradFixExp <- deriv(tmpf, fixCoefNames )
 		 function(object,newdata,pred){
-			 attr( with( coefGrad, with(newdata, eval(gradFixExp) )),"gradient") 
+			 attr( with( coefGrad, with(newdata, eval(gradFixExp) )),"gradient")
 		 }
 	}
 	gradRan <- if( !is.null(fDerivRanef) ) fDerivRanef else {
 		function(object,newdata,pred){ attr( with( coefGrad, with(newdata, eval(gradRanExp) )),"gradient")}
-	} 
+	}
 
 	##details<< \describe{\item{Variance of Residuals}{
-	## Providing no argument \code{fResidual} assumes iid residuals, i.e. \code{weights=NULL}. 
+	## Providing no argument \code{fResidual} assumes iid residuals, i.e. \code{weights=NULL}.
 	## For other residual variance models. See e.g. \code{\link{varResidPower}} corresponding to \code{weights=varPower(form=~fitted(.))}
 	##}}
 	if( 0==length(fVarResidual) ) fVarResidual <-	function(object,...) object$sigma^2
 
 	if( !inherits(object,"nlmeVarPrep"))	class(object) <- c("nlmeVarPrep", class(object))
-	
+
 	#calulate vector of derivative functions
-	##value<< nfit with additional entry \code{varPrep}, which is a list of 
+	##value<< nfit with additional entry \code{varPrep}, which is a list of
 	object$varPrep <- list(
 		varFix	= varFixef(object)	##<< variance-covariance matrix of fixed effects
 		,varRan	= varRanef(object)	##<< variance-covariance matrix of random effects
@@ -573,23 +583,23 @@ attachVarPrep <- function(
 		,coefRan = ranCoefNames		##<< names of the random coefficients in gradiant function
 		,gradFix = gradFix			##<< derivative function for fixed effects
 		,gradRan = gradRan			##<< derivative function for random effects
-		,fAddDummies = fAddDummies	##<< function to add dummy columns for categorial variables to predictor data frame 	
+		,fAddDummies = fAddDummies	##<< function to add dummy columns for categorial variables to predictor data frame
 		,fVarResidual = fVarResidual	##<< function to calculate residual variance
 		,fullFormula = fullFormula	##<< the extended formula as a string
 		)
 	##end<<
-	object		
+	object
 	}
 attr(attachVarPrep,"ex") <- function(){
-	data(modExampleStem)
+	#data(modExampleStem)
 	#mtrace(.covarMap)
 	nfit <- attachVarPrep( modExampleStem, form = "b0*dbh^b1*height^b2")
-	
-	data(Wutzler08BeechStem)
+
+	#data(Wutzler08BeechStem)
 	newdata=data.frame(dbh=18.8, height=16.9, age=40, si=30, alt=470)
 	(uNew <- nfit$varPrep$gradFix(newdata=newdata))
 	(wNew <- nfit$varPrep$gradRan(newdata=newdata))
-	
+
 	newdata=head(Wutzler08BeechStem)
 	(uNew <- nfit$varPrep$gradFix(newdata=newdata))
 	(wNew <- nfit$varPrep$gradRan(newdata=newdata))
@@ -599,23 +609,23 @@ attr(attachVarPrep,"ex") <- function(){
 #,fullFormula = tmpf
 
 
-varSumPredictNlmeGnls <- function( 
+varSumPredictNlmeGnls <- function(
 	### Variance of the sum of predictions taking care of covariances between single predictions.
 	object					##<< the model fit object used for predictions, treated by \code{\link{attachVarPrep}}
 	, newdata				##<< dataframe of new predictors and covariates
 	, pred=FALSE			##<< if TRUE, the predicted value (sum of predictions) is  returned in attribute pred
-	, retComponents=FALSE	##<< if TRUE, the sum of the error components (fixed, random, noise) are returned in attributes "varFix","varRan","varResid" 
+	, retComponents=FALSE	##<< if TRUE, the sum of the error components (fixed, random, noise) are returned in attributes "varFix","varRan","varResid"
 ){
 	##details<<
 	## Variance calculation is based on Taylor series expansion as described in appendix A2 by Wutzler08.
-	## 
+	##
 	## Performance of this function scales with n^2. So do not apply for too many records.
-	
+
 	##references<<
-	## Wutzler, T.; Wirth, C. & Schumacher, J. (2008) 
-	## Generic biomass functions for Common beech (Fagus sylvatica L.) in Central Europe - predictions and components of uncertainty. 
+	## Wutzler, T.; Wirth, C. & Schumacher, J. (2008)
+	## Generic biomass functions for Common beech (Fagus sylvatica L.) in Central Europe - predictions and components of uncertainty.
 	## Canadian Journal of Forest Research, 38, 1661-1675
-	
+
 	#reps specifies a vector of replicated observations (e.g. three identical rows are just represented by one row with reps=3)
 	#reps are not working yet rows are hidden
 	reps=rep(1,nrow(newdata))
@@ -673,24 +683,24 @@ varSumPredictNlmeGnls <- function(
 	}
 	resResid <- sum( object$varPrep$fVarResidual(object,newdata,ynew)*reps )
 	##value<< named vector
-	res <- c(	
-		pred = sum(ynew*reps)	##<< sum of predictions  
+	res <- c(
+		pred = sum(ynew*reps)	##<< sum of predictions
 		,sdPred = sqrt(resFix + resRan + resResid)	##<< standard deviation of pred
-		,varFix = resFix		##<< variance component due to uncertainty in fixed effects	
+		,varFix = resFix		##<< variance component due to uncertainty in fixed effects
 		,varRan = resRan		##<< variance component due to random effects
 		,varResid = resResid	##<< variance component due to residual variance
 		)
 	##end<<
 }
 attr(varSumPredictNlmeGnls,"ex") <- function(){
-	data(modExampleStem)	# load the model, which has already been prepared for prediction
+	#data(modExampleStem)	# load the model, which has already been prepared for prediction
 	#-- prediction on with varying number of records
-	data(Wutzler08BeechStem)
-	(resNlme <- varSumPredictNlmeGnls(modExampleStem, head( Wutzler08BeechStem, n=10 )))	
+	#data(Wutzler08BeechStem)
+	(resNlme <- varSumPredictNlmeGnls(modExampleStem, head( Wutzler08BeechStem, n=10 )))
 	(resNlme2 <- varSumPredictNlmeGnls(modExampleStem, head( Wutzler08BeechStem, n=180 )))
 	# plotting relative error components
 	barplot(c(sqrt(resNlme[-(1:2)])/resNlme[1], sqrt(resNlme2[-(1:2)])/resNlme2[1]) )
-	# note how the residual error declines with record number, 
+	# note how the residual error declines with record number,
 	# while the fixed and random error does does not decline
 }
 
