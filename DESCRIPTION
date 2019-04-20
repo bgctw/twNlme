@@ -11,4 +11,5 @@ Depends: R (>= 1.10.0), nlme
 Suggests: knitr, mnormt, RUnit
 Imports: R.methodsS3
 VignetteBuilder: knitr
-RoxygenNote: 6.0.1
+Encoding: UTF-8
+RoxygenNote: 6.1.1

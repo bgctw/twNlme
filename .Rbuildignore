@@ -2,6 +2,9 @@
 ^\.Rproj\.user$
 ^readme.txt$
 ^README.*$
+^News.md$
 ^scratch$
 ^vignettes/cache$
 ^vignettes/figure$
+^vignettes/.*_cache/
+^vignettes/.*_files/
